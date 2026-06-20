@@ -1,6 +1,6 @@
 # ============================================================
 # main.py - NIROB PANEL
-# Version: 5.0 VIP
+# Version: 5.0 VIP (Render Optimized)
 # ============================================================
 
 # Eventlet monkey patching MUST happen at the very top of the file
@@ -29,16 +29,6 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # ============================================================
 DATA_FILE = 'data.json'
 
-def load_data():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, 'r') as f:
-            return json.load(f)
-    return default_data()
-
-def save_data(data):
-    with open(DATA_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
-
 def default_data():
     return {
         'users': {
@@ -49,6 +39,26 @@ def default_data():
         'maintenance': False,
         'site_name': 'NIROB PANEL'
     }
+
+def load_data():
+    default = default_data()
+    if os.path.exists(DATA_FILE):
+        try:
+            # Check if file has data to avoid reading completely blank files
+            if os.path.getsize(DATA_FILE) > 0:
+                with open(DATA_FILE, 'r') as f:
+                    loaded = json.load(f)
+                    if isinstance(loaded, dict):
+                        # Merge file data into defaults to guarantee 'users' and other keys exist
+                        default.update(loaded)
+                        return default
+        except (json.JSONDecodeError, TypeError):
+            pass # Fallback cleanly to default_data if the file is corrupted
+    return default
+
+def save_data(data_to_save):
+    with open(DATA_FILE, 'w') as f:
+        json.dump(data_to_save, f, indent=2)
 
 data = load_data()
 os.makedirs('projects', exist_ok=True)
