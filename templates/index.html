@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NIROB PANEL — Admin</title>
+<title>NIROB PANEL — Enterprise</title>
 <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
@@ -34,27 +34,21 @@
     overflow-x: hidden;
   }
 
-  /* Animated background */
   .bg-animation {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    background: 
+    position: fixed; inset: 0; z-index: 0;
+    background:
       radial-gradient(ellipse at 20% 50%, rgba(255,107,157,0.05) 0%, transparent 60%),
       radial-gradient(ellipse at 80% 50%, rgba(192,132,252,0.05) 0%, transparent 60%);
   }
-  
   .bg-animation::before {
     content: '';
-    position: absolute;
-    inset: 0;
-    background-image: 
+    position: absolute; inset: 0;
+    background-image:
       linear-gradient(rgba(255,107,157,0.02) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255,107,157,0.02) 1px, transparent 1px);
     background-size: 40px 40px;
     animation: gridMove 20s linear infinite;
   }
-
   @keyframes gridMove {
     from { transform: translateY(0); }
     to { transform: translateY(40px); }
@@ -81,12 +75,10 @@
     display: flex; align-items: center; gap: 10px;
     animation: logoGlow 3s ease-in-out infinite;
   }
-  
   @keyframes logoGlow {
     0%, 100% { filter: drop-shadow(0 0 10px rgba(255,107,157,0.2)); }
     50% { filter: drop-shadow(0 0 30px rgba(255,107,157,0.4)); }
   }
-
   .logo-icon {
     width: 34px; height: 34px;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -97,7 +89,6 @@
     box-shadow: 0 0 20px var(--glow);
     animation: iconFloat 4s ease-in-out infinite;
   }
-  
   @keyframes iconFloat {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-3px); }
@@ -106,10 +97,7 @@
   .header-stats {
     display: flex; gap: 20px; align-items: center;
   }
-  .hstat {
-    font-size: 11px; color: var(--muted);
-    font-family: 'Share Tech Mono', monospace;
-  }
+  .hstat { font-size: 11px; color: var(--muted); font-family: 'Share Tech Mono', monospace; }
   .hstat span { color: var(--accent); font-weight: bold; }
 
   .status-live {
@@ -121,14 +109,12 @@
     background: rgba(52,211,153,0.08);
     border: 1px solid rgba(52,211,153,0.15);
   }
-  
   .live-dot {
     width: 8px; height: 8px; border-radius: 50%;
     background: var(--green);
     box-shadow: 0 0 15px var(--green);
     animation: livePulse 1.5s ease-in-out infinite;
   }
-  
   @keyframes livePulse {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(1.3); }
@@ -145,7 +131,6 @@
     padding: 20px 0;
     overflow-y: auto;
   }
-
   .nav-section { margin-bottom: 24px; }
   .nav-label {
     font-size: 9px; letter-spacing: 2px; color: var(--muted);
@@ -153,7 +138,6 @@
     font-family: 'Share Tech Mono', monospace;
     text-transform: uppercase;
   }
-
   .nav-item {
     display: flex; align-items: center; gap: 10px;
     padding: 10px 16px;
@@ -162,7 +146,6 @@
     color: var(--muted);
     transition: all 0.2s;
     border-left: 3px solid transparent;
-    position: relative;
   }
   .nav-item:hover { color: var(--text); background: rgba(255,107,157,0.05); }
   .nav-item.active {
@@ -291,7 +274,7 @@
   .proj-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; color: var(--accent); }
   .proj-cmd { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--muted); }
   .proj-actions { margin-left: auto; display: flex; gap: 8px; }
-  
+
   .status-badge {
     padding: 4px 12px; border-radius: 20px;
     font-size: 10px; font-weight: 700; letter-spacing: 1px;
@@ -308,6 +291,11 @@
     background: rgba(248,113,113,0.15);
     color: var(--red);
     border: 1px solid rgba(248,113,113,0.3);
+  }
+  .status-badge.error {
+    background: rgba(248,113,113,0.25);
+    color: var(--red);
+    border: 1px solid rgba(248,113,113,0.4);
   }
 
   .btn {
@@ -335,6 +323,12 @@
     color: var(--red);
   }
   .btn-danger:hover { background: rgba(248,113,113,0.25); }
+  .btn-success {
+    background: rgba(52,211,153,0.15);
+    border: 1px solid rgba(52,211,153,0.3);
+    color: var(--green);
+  }
+  .btn-success:hover { background: rgba(52,211,153,0.25); }
 
   .upload-zone {
     border: 2px dashed var(--border);
@@ -375,26 +369,52 @@
   .file-ext.py { background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
   .file-ext.js { background: rgba(245,158,11,0.2); color: var(--gold); border: 1px solid rgba(245,158,11,0.3); }
   .file-ext.zip { background: rgba(124,58,237,0.2); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+  .file-ext.txt { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+  .file-ext.json { background: rgba(245,158,11,0.15); color: var(--gold); border: 1px solid rgba(245,158,11,0.3); }
+  .file-ext.html { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
   .file-name { font-size: 13px; font-weight: 500; color: var(--text); }
   .file-size { font-size: 11px; color: var(--muted); }
   .file-actions { margin-left: auto; display: flex; gap: 6px; }
 
-  .log-box, .terminal-container {
+  .log-box, .terminal-box {
     background: #020409;
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 16px;
     font-family: 'Share Tech Mono', monospace;
     font-size: 12px;
-    min-height: 200px; max-height: 400px;
+    min-height: 250px; max-height: 450px;
     overflow-y: auto;
     line-height: 1.8;
+    position: relative;
   }
-  .log-line, .terminal-line { margin-bottom: 2px; }
+  .log-line, .terminal-line { margin-bottom: 2px; white-space: pre-wrap; word-break: break-all; }
   .log-line.success, .terminal-line.success { color: var(--green); }
   .log-line.error, .terminal-line.error { color: var(--red); }
   .log-line.info, .terminal-line.info { color: var(--accent); }
   .log-line.muted, .terminal-line.muted { color: var(--muted); }
+  .log-line.stdout, .terminal-line.stdout { color: #e8e8f0; }
+  .log-line.stderr, .terminal-line.stderr { color: var(--red); }
+
+  /* Terminal input bar */
+  .terminal-input-row {
+    display: flex; gap: 8px; margin-top: 12px;
+    align-items: center;
+  }
+  .terminal-input-row .input-field {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text); font-size: 13px;
+    font-family: 'Share Tech Mono', monospace;
+    outline: none; transition: all 0.2s;
+  }
+  .terminal-input-row .input-field:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--glow);
+  }
 
   .pkg-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
   .pkg-tag {
@@ -508,6 +528,7 @@
     background: rgba(255,255,255,0.1);
     cursor: pointer; position: relative; transition: all 0.3s;
     border: 1px solid var(--border);
+    flex-shrink: 0;
   }
   .toggle.on { background: var(--accent); border-color: var(--accent); }
   .toggle::after {
@@ -556,6 +577,39 @@
   }
   .color-swatch:hover, .color-swatch.active { border-color: white; transform: scale(1.1); }
 
+  /* File editor */
+  .editor-container {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .editor-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+  }
+  .editor-filename {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px; color: var(--accent);
+  }
+  .editor-textarea {
+    width: 100%; min-height: 300px;
+    background: #020409;
+    border: none;
+    color: #e8e8f0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 16px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+    tab-size: 4;
+  }
+  .editor-textarea:focus {
+    box-shadow: inset 0 0 30px rgba(255,107,157,0.03);
+  }
+
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -570,7 +624,10 @@
   }
 
   .new-proj-form { display: flex; flex-direction: column; gap: 12px; }
-  .form-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; letter-spacing: 1px; font-family: 'Share Tech Mono', monospace; }
+  .form-label {
+    font-size: 11px; color: var(--muted); margin-bottom: 4px;
+    letter-spacing: 1px; font-family: 'Share Tech Mono', monospace;
+  }
 
   .run-counter {
     display: flex; align-items: center; gap: 6px;
@@ -585,13 +642,11 @@
     font-size: 11px; font-family: 'Share Tech Mono', monospace;
   }
   .status-indicator.online {
-    background: rgba(52,211,153,0.12);
-    color: var(--green);
+    background: rgba(52,211,153,0.12); color: var(--green);
     border: 1px solid rgba(52,211,153,0.2);
   }
   .status-indicator.offline {
-    background: rgba(248,113,113,0.12);
-    color: var(--red);
+    background: rgba(248,113,113,0.12); color: var(--red);
     border: 1px solid rgba(248,113,113,0.2);
   }
   .status-indicator .dot {
@@ -600,6 +655,22 @@
   }
   .status-indicator.online .dot { background: var(--green); }
   .status-indicator.offline .dot { background: var(--red); animation: none; }
+
+  .conflict-modal-body {
+    margin: 16px 0;
+    padding: 12px;
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.2);
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+  }
+  .conflict-modal-body div {
+    padding: 4px 0;
+    color: var(--red);
+  }
 </style>
 </head>
 <body>
@@ -616,9 +687,9 @@
     NIROB PANEL
   </div>
   <div class="header-stats">
-    <div class="hstat">CPU: <span id="hCpu">11.4%</span></div>
-    <div class="hstat">RAM: <span id="hRam">42.9%</span></div>
-    <div class="hstat">DISK: <span id="hDisk">83.7%</span></div>
+    <div class="hstat">CPU: <span id="hCpu">0%</span></div>
+    <div class="hstat">RAM: <span id="hRam">0%</span></div>
+    <div class="hstat">DISK: <span id="hDisk">0%</span></div>
     <div class="hstat" id="loggedUserHeader">@xNIROB</div>
   </div>
   <div class="status-live">
@@ -705,18 +776,18 @@
       <div class="resource-row">
         <div class="resource-card">
           <div class="res-label">CPU USAGE</div>
-          <div class="res-val" id="cpuVal" style="color:var(--accent);">11.4%</div>
-          <div class="progress-bar"><div class="progress-fill" id="cpuBar" style="width:11.4%"></div></div>
+          <div class="res-val" id="cpuVal" style="color:var(--accent);">0%</div>
+          <div class="progress-bar"><div class="progress-fill" id="cpuBar" style="width:0%"></div></div>
         </div>
         <div class="resource-card">
           <div class="res-label">RAM USAGE</div>
-          <div class="res-val" id="ramVal" style="color:#a78bfa;">42.9%</div>
-          <div class="progress-bar"><div class="progress-fill" id="ramBar" style="width:42.9%;background:linear-gradient(90deg,#a78bfa,#7c3aed)"></div></div>
+          <div class="res-val" id="ramVal" style="color:#a78bfa;">0%</div>
+          <div class="progress-bar"><div class="progress-fill" id="ramBar" style="width:0%;background:linear-gradient(90deg,#a78bfa,#7c3aed)"></div></div>
         </div>
         <div class="resource-card">
           <div class="res-label">DISK USAGE</div>
-          <div class="res-val" id="diskVal" style="color:var(--gold);">83.7%</div>
-          <div class="progress-bar"><div class="progress-fill" id="diskBar" style="width:83.7%;background:linear-gradient(90deg,var(--gold),#d97706)"></div></div>
+          <div class="res-val" id="diskVal" style="color:var(--gold);">0%</div>
+          <div class="progress-bar"><div class="progress-fill" id="diskBar" style="width:0%;background:linear-gradient(90deg,var(--gold),#d97706)"></div></div>
         </div>
       </div>
 
@@ -749,6 +820,7 @@
         </div>
         <div id="detailStatus"></div>
         <button id="detailStartBtn" class="btn btn-primary" style="margin-left:auto;" onclick="toggleProject()">▶ Start</button>
+        <button id="detailRestartBtn" class="btn btn-ghost" onclick="restartProject()" style="display:none;">↻ Restart</button>
       </div>
 
       <div class="tabs">
@@ -762,10 +834,10 @@
       <div id="proj-tab-files">
         <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
              ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-          <input type="file" id="fileInput" multiple accept=".py,.js,.ts,.zip,.txt,.html,.json,.yml,.yaml,.md" onchange="handleFiles(this.files)" style="display:none;">
+          <input type="file" id="fileInput" multiple accept=".py,.js,.ts,.zip,.txt,.html,.json,.yml,.yaml,.md,.css,.sh" onchange="handleFiles(this.files)" style="display:none;">
           <span class="upload-icon">📂</span>
           <div class="upload-title">Click or drag to upload</div>
-          <div class="upload-sub">Supports: .py, .js, .ts, .zip, .txt, .html, .json, .yml, .md</div>
+          <div class="upload-sub">Supports: .py, .js, .ts, .zip, .txt, .html, .json, .yml, .md, .css, .sh</div>
         </div>
         <div id="fileList" style="margin-top:16px;"></div>
       </div>
@@ -820,7 +892,7 @@
             <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
 
             <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
-              <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div class="setting-row">
                 <div>
                   <div style="font-size:13px;font-weight:600;color:var(--accent);">Auto Reset</div>
                   <div style="font-size:11px;color:var(--muted);margin-top:2px;">Auto restart on crash or error</div>
@@ -835,7 +907,7 @@
       <div id="proj-tab-logs-proj" style="display:none;">
         <div class="section-card">
           <div class="section-header">
-            <div class="section-title">Output Logs · Live</div>
+            <div class="section-title">Output Logs · Live Streaming</div>
             <div style="display:flex;gap:8px;">
               <button class="btn btn-danger" style="font-size:10px;padding:5px 12px;" onclick="clearLogs()">🗑 Clear</button>
               <button class="btn btn-primary" style="font-size:10px;padding:5px 12px;" onclick="refreshLogs()">↻ Refresh</button>
@@ -861,11 +933,34 @@
             </div>
           </div>
           <div class="section-body">
-            <div class="terminal-container" id="terminalBox">
-              <div class="terminal-line muted">Terminal ready. Start the project to see output.</div>
+            <div class="terminal-box" id="terminalBox">
+              <div class="terminal-line muted">▼ Terminal ready. Start the project to interact.</div>
+              <div class="terminal-line muted">Type commands below and press Enter to send.</div>
+            </div>
+            <div class="terminal-input-row">
+              <input class="input-field" id="terminalInput" placeholder="Type a command..." disabled
+                     onkeydown="if(event.key==='Enter')sendTerminalCommand()">
+              <button class="btn btn-primary" id="terminalSendBtn" onclick="sendTerminalCommand()" disabled>→ Send</button>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div id="page-file-editor" style="display:none;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap;">
+        <button onclick="backToProject()" class="btn btn-ghost" style="padding:8px 12px;">← Back</button>
+        <div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:var(--accent);" id="editorTitle">Editing</div>
+        </div>
+        <button class="btn btn-primary" style="margin-left:auto;" onclick="saveEditorFile()">💾 Save</button>
+      </div>
+      <div class="editor-container">
+        <div class="editor-header">
+          <span class="editor-filename" id="editorFilename">main.py</span>
+          <span style="font-size:10px;color:var(--muted);font-family:'Share Tech Mono',monospace;">UTF-8 · NO BOM</span>
+        </div>
+        <textarea class="editor-textarea" id="editorTextarea" spellcheck="false"></textarea>
       </div>
     </div>
 
@@ -939,11 +1034,6 @@
             <button class="btn btn-primary" onclick="saveSiteName()">Save Site Name</button>
           </div>
           <div style="margin-bottom:20px;padding-top:20px;border-top:1px solid var(--border);">
-            <div class="form-label">Change Admin Password</div>
-            <input class="input-field" id="newAdminPass" type="password" placeholder="New Admin Password" style="width:100%;max-width:300px;margin-bottom:10px;">
-            <button class="btn btn-primary" onclick="changeAdminPass()">Change Admin Password</button>
-          </div>
-          <div style="margin-bottom:20px;padding-top:20px;border-top:1px solid var(--border);">
             <div class="form-label">Change Your Password</div>
             <input class="input-field" id="currentPass" type="password" placeholder="Current Password" style="width:100%;max-width:300px;margin-bottom:6px;">
             <input class="input-field" id="newUserPass" type="password" placeholder="New Password" style="width:100%;max-width:300px;margin-bottom:10px;">
@@ -952,9 +1042,16 @@
           <div style="padding-top:20px;border-top:1px solid var(--border);">
             <div class="form-label">Install All Packages</div>
             <button class="btn btn-success" style="padding:12px 24px;font-size:12px;border-radius:10px;" onclick="installAllPackages()">
-              📦 Install All Packages
+              📦 Install All Common Packages
             </button>
-            <div style="font-size:11px;color:var(--muted);margin-top:8px;">This will install all common Python packages (flask, django, discord.py, etc.)</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:8px;">This will install flask, django, discord.py, fastapi, requests, aiohttp, etc.</div>
+          </div>
+          <div style="padding-top:20px;border-top:1px solid var(--border);margin-top:20px;">
+            <div class="form-label">Danger Zone</div>
+            <button class="btn btn-danger" style="padding:12px 24px;font-size:12px;" onclick="resetAllData()">
+              ⚠️ Reset All Data
+            </button>
+            <div style="font-size:11px;color:var(--muted);margin-top:8px;">This will delete ALL projects and reset the panel. Cannot be undone.</div>
           </div>
         </div>
       </div>
@@ -1009,19 +1106,53 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-title" id="confirmTitle">Confirm</div>
+    <div id="confirmBody" style="font-size:13px;color:var(--muted);margin-bottom:20px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancel</button>
+      <button class="btn btn-danger" id="confirmBtn" onclick="">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="conflictModal">
+  <div class="modal">
+    <div class="modal-title">⚠️ File Conflict Detected</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+      The ZIP file contains files that already exist in this project. Overwrite them?
+    </div>
+    <div class="conflict-modal-body" id="conflictFileList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('conflictModal'); pendingZipFile = null;">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmZipOverwrite()">Overwrite All</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ============================================================
+// NIROB PANEL v6 - Frontend Engine
+// ============================================================
+
 const socket = io();
 
-let state = {
+const state = {
   currentPage: 'dashboard',
   currentProjectId: null,
   currentTab: 'files',
+  editingFile: null,
   projects: [],
   users: [],
   siteName: 'NIROB PANEL',
   maintenance: false,
   accentColor: '#ff6b9d',
+  logSubscribed: false
 };
+
+let pendingZipFile = null;
+let pendingZipOverwrite = false;
 
 const presets = [
   {name:'Pink',color:'#ff6b9d'},{name:'Purple',color:'#a78bfa'},{name:'Blue',color:'#60a5fa'},
@@ -1030,28 +1161,75 @@ const presets = [
   {name:'Violet',color:'#8b5cf6'},{name:'Gold',color:'#fcd34d'},{name:'Teal',color:'#2dd4bf'},
 ];
 
+// ============================================================
+// Socket.IO Event Handlers - LIVE TERMINAL & LOGS
+// ============================================================
+socket.on('connect', () => {
+  console.log('[WS] Connected');
+  // Subscribe to current project if we're on detail page
+  if (state.currentProjectId && state.currentPage === 'project-detail') {
+    socket.emit('subscribe_project', { project_id: state.currentProjectId });
+  }
+});
+
+socket.on('terminal_output', (data) => {
+  if (data.project_id === state.currentProjectId) {
+    appendToTerminal(data.data);
+    // Also append to logs
+    appendToLogBox(data.data);
+  }
+});
+
+socket.on('log_update', (data) => {
+  if (data.project_id === state.currentProjectId) {
+    appendToLogBox(data.data);
+  }
+});
+
+socket.on('project_status', (data) => {
+  if (data.project_id === state.currentProjectId) {
+    const p = state.projects.find(x => x.id === data.project_id);
+    if (p) {
+      p.status = data.status;
+      updateProjectDetailUI(p);
+    }
+  }
+  // Refresh projects
+  fetchProjects().then(() => {
+    renderDashboard();
+    renderProjects();
+  });
+});
+
+// ============================================================
+// API Helper
+// ============================================================
 async function apiCall(url, options = {}) {
   try {
     const res = await fetch(url, {
       ...options,
       headers: { 'Content-Type': 'application/json', ...options.headers }
     });
-    return await res.json();
+    const data = await res.json();
+    return data;
   } catch (e) {
     return { error: 'Network error' };
   }
 }
 
+// ============================================================
+// Data Fetching
+// ============================================================
 async function fetchProjects() {
   const data = await apiCall('/api/projects');
-  state.projects = data || [];
+  state.projects = Array.isArray(data) ? data : [];
   return state.projects;
 }
 
 async function fetchUsers() {
   try {
     const data = await apiCall('/api/users');
-    state.users = data || [];
+    state.users = Array.isArray(data) ? data : [];
   } catch (e) {
     state.users = [];
   }
@@ -1061,7 +1239,10 @@ async function fetchUsers() {
 async function fetchSiteName() {
   const data = await apiCall('/api/site_name');
   state.siteName = data.name || 'NIROB PANEL';
-  document.querySelector('.logo').textContent = '👑 ' + state.siteName;
+  const logoEl = document.querySelector('.logo');
+  if (logoEl) {
+    logoEl.innerHTML = '<div class="logo-icon">👑</div> ' + state.siteName;
+  }
   return state.siteName;
 }
 
@@ -1075,18 +1256,49 @@ async function fetchMaintenance() {
   return state.maintenance;
 }
 
+async function fetchSystemStats() {
+  try {
+    const data = await apiCall('/api/system/stats');
+    if (data && data.cpu !== undefined) {
+      document.getElementById('cpuVal').textContent = data.cpu + '%';
+      document.getElementById('ramVal').textContent = data.ram + '%';
+      document.getElementById('diskVal').textContent = data.disk + '%';
+      document.getElementById('hCpu').textContent = data.cpu + '%';
+      document.getElementById('hRam').textContent = data.ram + '%';
+      document.getElementById('hDisk').textContent = data.disk + '%';
+      document.getElementById('cpuBar').style.width = data.cpu + '%';
+      document.getElementById('ramBar').style.width = data.ram + '%';
+      document.getElementById('diskBar').style.width = data.disk + '%';
+    }
+  } catch (e) { /* ignore */ }
+}
+
 async function init() {
+  // Get logged in user info
+  const me = await apiCall('/api/me');
+  if (me.username) {
+    document.getElementById('sidebarName').textContent = '@' + me.username;
+    document.getElementById('sidebarAvatar').textContent = me.username.charAt(0).toUpperCase();
+    document.getElementById('sidebarRole').textContent = (me.role || 'user').toUpperCase();
+    document.getElementById('loggedUserHeader').textContent = '@' + me.username;
+  }
+
   await Promise.all([
     fetchProjects(),
     fetchUsers(),
     fetchSiteName(),
     fetchMaintenance(),
+    fetchSystemStats()
   ]);
+
   renderDashboard();
   renderTheme();
   showToast('🚀 Welcome to NIROB Panel!', 'success');
 }
 
+// ============================================================
+// Toast Notifications
+// ============================================================
 function showToast(msg, type = 'info') {
   const icons = { success: '✅', error: '❌', info: 'ℹ️', warn: '⚠️' };
   const t = document.createElement('div');
@@ -1097,27 +1309,37 @@ function showToast(msg, type = 'info') {
     t.style.opacity = '0';
     t.style.transition = 'opacity 0.3s';
     setTimeout(() => t.remove(), 300);
-  }, 3500);
+  }, 4000);
 }
 
+// ============================================================
+// Page Navigation
+// ============================================================
 function showPage(page) {
   document.querySelectorAll('[id^="page-"]').forEach(p => p.style.display = 'none');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
   const el = document.getElementById('page-' + page);
   if (el) el.style.display = 'block';
+
   const nav = document.getElementById('nav-' + page);
   if (nav) nav.classList.add('active');
+
   state.currentPage = page;
+
   if (page === 'dashboard') renderDashboard();
-  if (page === 'projects') renderProjects();
-  if (page === 'users') renderUsers();
-  if (page === 'theme') renderTheme();
+  else if (page === 'projects') renderProjects();
+  else if (page === 'users') renderUsers();
+  else if (page === 'theme') renderTheme();
 }
 
+// ============================================================
+// Dashboard
+// ============================================================
 function renderDashboard() {
   const running = state.projects.filter(p => p.status === 'running').length;
   const totalFiles = state.projects.reduce((a, p) => a + (p.files ? p.files.length : 0), 0);
-  
+
   document.getElementById('statUsers').textContent = state.users.length;
   document.getElementById('statProjects').textContent = state.projects.length;
   document.getElementById('statRunning').textContent = running;
@@ -1125,7 +1347,7 @@ function renderDashboard() {
   document.getElementById('runningBadge').textContent = running;
   document.getElementById('projBadge').textContent = state.projects.length;
   document.getElementById('userCountSub').textContent = state.users.length + ' registered users';
-  
+
   const c = document.getElementById('dashProjects');
   if (!state.projects.length) {
     c.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No projects yet. Create one!</div>';
@@ -1136,20 +1358,23 @@ function renderDashboard() {
       <div class="proj-icon">🐍</div>
       <div>
         <div class="proj-name">${p.name}</div>
-        <div class="proj-cmd">${p.command}</div>
+        <div class="proj-cmd">${p.command || 'python main.py'}</div>
         <div class="run-counter"><div class="run-dot" style="background:${p.status === 'running' ? 'var(--green)' : 'var(--red)'}"></div>${p.files ? p.files.length : 0} files</div>
       </div>
       <div class="proj-actions">
-        <span class="status-badge ${p.status}">${p.status.toUpperCase()}</span>
+        <span class="status-badge ${p.status}">${(p.status || 'stopped').toUpperCase()}</span>
       </div>
     </div>
   `).join('');
 }
 
+// ============================================================
+// Projects List
+// ============================================================
 function renderProjects() {
   const c = document.getElementById('projectsList');
   if (!state.projects.length) {
-    c.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:40px;">No projects yet.</div>';
+    c.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:40px;">No projects yet. Create one!</div>';
     return;
   }
   c.innerHTML = state.projects.map(p => `
@@ -1157,18 +1382,21 @@ function renderProjects() {
       <div class="proj-icon">🐍</div>
       <div style="flex:1;">
         <div class="proj-name">${p.name}</div>
-        <div class="proj-cmd">${p.command}</div>
+        <div class="proj-cmd">${p.command || 'python main.py'}</div>
         <div class="run-counter"><div class="run-dot" style="background:${p.status === 'running' ? 'var(--green)' : 'var(--red)'}"></div>${p.files ? p.files.length : 0} files</div>
       </div>
-      <span class="status-badge ${p.status}">${p.status.toUpperCase()}</span>
+      <span class="status-badge ${p.status}">${(p.status || 'stopped').toUpperCase()}</span>
       <div style="display:flex;gap:6px;margin-left:8px;">
         <button class="btn btn-ghost" onclick="openProject('${p.id}')" style="font-size:11px;padding:5px 10px;">View</button>
-        <button class="btn btn-danger" onclick="deleteProject('${p.id}')" style="font-size:11px;padding:5px 10px;">🗑</button>
+        <button class="btn btn-danger" onclick="confirmDeleteProject('${p.id}', '${p.name}')" style="font-size:11px;padding:5px 10px;">🗑</button>
       </div>
     </div>
   `).join('');
 }
 
+// ============================================================
+// Users
+// ============================================================
 function renderUsers() {
   const c = document.getElementById('usersList');
   if (!state.users.length) {
@@ -1177,25 +1405,34 @@ function renderUsers() {
   }
   c.innerHTML = state.users.map(u => `
     <div class="user-row">
-      <div class="user-row-avatar">${u.username.charAt(0).toUpperCase()}</div>
+      <div class="user-row-avatar">${(u.username || '?').charAt(0).toUpperCase()}</div>
       <div>
         <div class="user-info-name">${u.username}</div>
         <div class="user-info-stats">${u.email || ''} · ${u.role || 'user'}</div>
       </div>
       <div class="user-row-actions">
-        ${u.username !== 'xNIROB' ? `<button class="btn btn-danger" style="font-size:10px;padding:5px 10px;" onclick="deleteUser('${u.username}')">Delete</button>` : ''}
+        ${u.username !== 'xNIROB' ? `<button class="btn btn-danger" style="font-size:10px;padding:5px 10px;" onclick="confirmDeleteUser('${u.username}')">Delete</button>` : '<span style="font-size:10px;color:var(--gold);font-family:Share Tech Mono,monospace;">OWNER</span>'}
       </div>
     </div>
   `).join('');
 }
 
+// ============================================================
+// Theme
+// ============================================================
 function renderTheme() {
   const g = document.getElementById('colorSwatches');
   g.innerHTML = presets.map(p => `
-    <div class="color-swatch ${state.accentColor === p.color ? 'active' : ''}" 
+    <div class="color-swatch ${state.accentColor === p.color ? 'active' : ''}"
          style="background:${p.color};box-shadow:0 0 10px ${p.color}40"
          onclick="applyColor('${p.color}', this)" title="${p.name}"></div>
   `).join('');
+  // Update current display
+  document.getElementById('currentColorDot').style.background = state.accentColor;
+  document.getElementById('currentColorDot').style.boxShadow = '0 0 15px ' + state.accentColor + '40';
+  document.getElementById('currentColorHex').textContent = state.accentColor;
+  document.getElementById('colorHexInput').value = state.accentColor;
+  document.getElementById('colorPicker').value = state.accentColor;
 }
 
 function applyColor(hex, el) {
@@ -1219,19 +1456,53 @@ function applyCustomColor() {
   renderTheme();
 }
 
+// ============================================================
+// Tab Switching
+// ============================================================
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
+  const tabEl = document.getElementById('tab-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+
   ['files', 'packages', 'settings-proj', 'logs-proj', 'terminal'].forEach(t => {
     const el = document.getElementById('proj-tab-' + t);
     if (el) el.style.display = (t === tab) ? 'block' : 'none';
   });
+
   state.currentTab = tab;
+
+  // When switching to terminal, focus the input if project is running
+  if (tab === 'terminal') {
+    const p = state.projects.find(x => x.id === state.currentProjectId);
+    if (p && p.status === 'running') {
+      document.getElementById('terminalInput').disabled = false;
+      document.getElementById('terminalSendBtn').disabled = false;
+      document.getElementById('terminalInput').focus();
+    }
+  }
+
+  // When switching to logs, subscribe for live updates
+  if (tab === 'logs-proj') {
+    if (state.currentProjectId && !state.logSubscribed) {
+      socket.emit('subscribe_project', { project_id: state.currentProjectId });
+      state.logSubscribed = true;
+    }
+  }
 }
 
-function openModal(id) { document.getElementById(id).classList.add('show'); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+// ============================================================
+// Modals
+// ============================================================
+function openModal(id) {
+  document.getElementById(id).classList.add('show');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
 
+// ============================================================
+// Auth
+// ============================================================
 async function handleLogout() {
   await apiCall('/api/logout', { method: 'POST' });
   window.location.href = '/';
@@ -1247,19 +1518,21 @@ async function toggleMaintenance() {
   showToast('Maintenance ' + (state.maintenance ? 'ENABLED' : 'DISABLED'), state.maintenance ? 'warn' : 'info');
 }
 
-// Placeholder functions for project operations
+// ============================================================
+// Project CRUD
+// ============================================================
 function openNewProject() { openModal('newProjectModal'); }
 
 async function createProject() {
   const name = document.getElementById('newProjName').value.trim();
   const command = document.getElementById('newProjCmd').value.trim() || 'python main.py';
   if (!name) { showToast('Enter a project name', 'error'); return; }
-  
+
   const data = await apiCall('/api/projects', {
     method: 'POST',
     body: JSON.stringify({ name, command })
   });
-  
+
   if (data.success) {
     closeModal('newProjectModal');
     document.getElementById('newProjName').value = '';
@@ -1273,40 +1546,130 @@ async function createProject() {
   }
 }
 
-async function deleteProject(id) {
-  if (!confirm('Delete this project?')) return;
-  const data = await apiCall(`/api/projects/${id}`, { method: 'DELETE' });
-  if (data.success) {
-    await fetchProjects();
-    renderProjects();
-    renderDashboard();
-    showToast('Project deleted', 'info');
-  } else {
-    showToast('Failed to delete project', 'error');
-  }
+function confirmDeleteProject(id, name) {
+  document.getElementById('confirmTitle').textContent = 'Delete Project?';
+  document.getElementById('confirmBody').textContent = `Are you sure you want to delete "${name}"? All files will be permanently removed.`;
+  document.getElementById('confirmBtn').onclick = async () => {
+    closeModal('confirmModal');
+    const data = await apiCall(`/api/projects/${id}`, { method: 'DELETE' });
+    if (data.success) {
+      await fetchProjects();
+      renderProjects();
+      renderDashboard();
+      showToast('Project deleted', 'info');
+    } else {
+      showToast('Failed to delete project', 'error');
+    }
+  };
+  openModal('confirmModal');
 }
 
 async function openProject(id) {
   state.currentProjectId = id;
+  state.logSubscribed = false;
   const p = state.projects.find(x => x.id === id);
   if (!p) return;
-  
+
   document.querySelectorAll('[id^="page-"]').forEach(el => el.style.display = 'none');
   document.getElementById('page-project-detail').style.display = 'block';
-  
-  document.getElementById('detailName').textContent = p.name;
-  document.getElementById('detailCmd').textContent = p.command || 'python main.py';
-  document.getElementById('detailStatus').innerHTML = `<span class="status-badge ${p.status}">${p.status.toUpperCase()}</span>`;
-  document.getElementById('detailStartBtn').textContent = p.status === 'running' ? '■ Stop' : '▶ Start';
+  state.currentPage = 'project-detail';
+
+  updateProjectDetailUI(p);
+
   document.getElementById('mainFile').value = p.main_file || 'main.py';
   document.getElementById('mainCmd').value = p.command || 'python main.py';
   document.getElementById('portField').value = p.port || '8080';
-  
+
   switchTab('files');
   await fetchFiles(id);
   renderInstalled();
+
+  // Subscribe to WebSocket for live updates
+  socket.emit('subscribe_project', { project_id: id });
+  state.logSubscribed = true;
+
+  // Update terminal status
+  updateTerminalStatus(p.status);
 }
 
+function updateProjectDetailUI(p) {
+  document.getElementById('detailName').textContent = p.name;
+  document.getElementById('detailCmd').textContent = p.command || 'python main.py';
+  document.getElementById('detailStatus').innerHTML = `<span class="status-badge ${p.status || 'stopped'}">${(p.status || 'stopped').toUpperCase()}</span>`;
+  document.getElementById('detailStartBtn').textContent = p.status === 'running' ? '■ Stop' : '▶ Start';
+  document.getElementById('detailRestartBtn').style.display = p.status === 'running' ? 'inline-block' : 'none';
+  updateTerminalStatus(p.status);
+}
+
+function updateTerminalStatus(status) {
+  const ts = document.getElementById('terminalStatus');
+  if (status === 'running') {
+    ts.className = 'status-indicator online';
+    ts.innerHTML = '<span class="dot"></span> ONLINE';
+    document.getElementById('terminalInput').disabled = false;
+    document.getElementById('terminalSendBtn').disabled = false;
+  } else {
+    ts.className = 'status-indicator offline';
+    ts.innerHTML = '<span class="dot"></span> OFFLINE';
+    document.getElementById('terminalInput').disabled = true;
+    document.getElementById('terminalSendBtn').disabled = true;
+  }
+}
+  // ============================================================
+// Project Start/Stop/Restart
+// ============================================================
+async function toggleProject() {
+  const p = state.projects.find(x => x.id === state.currentProjectId);
+  if (!p) return;
+
+  const action = p.status === 'running' ? 'stop' : 'start';
+  const data = await apiCall(`/api/projects/${p.id}/${action}`, { method: 'POST' });
+
+  if (data.success) {
+    await fetchProjects();
+    const updated = state.projects.find(x => x.id === p.id);
+    if (updated) {
+      updateProjectDetailUI(updated);
+      updateTerminalStatus(updated.status);
+      // Clear terminal on start
+      if (action === 'start') {
+        document.getElementById('terminalBox').innerHTML = '';
+        document.getElementById('logBox').innerHTML = '';
+      }
+    }
+    renderDashboard();
+    renderProjects();
+    showToast(data.message || 'Action completed', 'success');
+  } else {
+    showToast(data.error || 'Action failed', 'error');
+  }
+}
+
+async function restartProject() {
+  const p = state.projects.find(x => x.id === state.currentProjectId);
+  if (!p) return;
+
+  showToast('🔄 Restarting project...', 'info');
+  const data = await apiCall(`/api/projects/${p.id}/restart`, { method: 'POST' });
+
+  if (data.success) {
+    await fetchProjects();
+    const updated = state.projects.find(x => x.id === p.id);
+    if (updated) {
+      updateProjectDetailUI(updated);
+      updateTerminalStatus(updated.status);
+      document.getElementById('terminalBox').innerHTML = '';
+      document.getElementById('logBox').innerHTML = '';
+    }
+    showToast('✅ Project restarted', 'success');
+  } else {
+    showToast(data.error || 'Restart failed', 'error');
+  }
+}
+
+// ============================================================
+// File Management
+// ============================================================
 async function fetchFiles(id) {
   const data = await apiCall(`/api/projects/${id}/files`);
   const c = document.getElementById('fileList');
@@ -1317,11 +1680,12 @@ async function fetchFiles(id) {
   c.innerHTML = data.map(f => `
     <div class="file-item">
       <div class="file-ext ${f.ext || 'file'}">.${f.ext || 'file'}</div>
-      <div>
+      <div onclick="openFileEditor('${f.name}')" style="flex:1;cursor:pointer;">
         <div class="file-name">${f.name}</div>
-        <div class="file-size">${(f.size/1024).toFixed(1)} KB</div>
+        <div class="file-size">${(f.size/1024).toFixed(1)} KB · ${f.modified || ''}</div>
       </div>
       <div class="file-actions">
+        <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="openFileEditor('${f.name}')">✏️ Edit</button>
         <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setMain('${f.name}')">Set Main</button>
         <button class="btn btn-danger" style="font-size:10px;padding:4px 8px;" onclick="deleteFile('${f.name}')">🗑</button>
       </div>
@@ -1336,6 +1700,8 @@ function setMain(name) {
   if (ext === 'py') cmd = 'python ' + name;
   else if (ext === 'js') cmd = 'node ' + name;
   else if (ext === 'ts') cmd = 'ts-node ' + name;
+  else if (ext === 'sh') cmd = 'bash ' + name;
+  else if (ext === 'php') cmd = 'php ' + name;
   else cmd = 'python ' + name;
   document.getElementById('mainCmd').value = cmd;
   showToast(`📄 ${name} set as main file`, 'success');
@@ -1343,50 +1709,146 @@ function setMain(name) {
 
 async function deleteFile(name) {
   const id = state.currentProjectId;
-  if (!id || !confirm('Delete ' + name + '?')) return;
-  const data = await apiCall(`/api/projects/${id}/files/${name}`, { method: 'DELETE' });
-  if (data.success) {
-    showToast('File deleted', 'info');
-    await fetchFiles(id);
-  } else {
-    showToast('Failed to delete file', 'error');
-  }
-}
+  if (!id) return;
 
-async function toggleProject() {
-  const p = state.projects.find(x => x.id === state.currentProjectId);
-  if (!p) return;
-  
-  const action = p.status === 'running' ? 'stop' : 'start';
-  const data = await apiCall(`/api/projects/${p.id}/${action}`, { method: 'POST' });
-  
-  if (data.success) {
-    await fetchProjects();
-    const updated = state.projects.find(x => x.id === p.id);
-    if (updated) {
-      document.getElementById('detailStatus').innerHTML = `<span class="status-badge ${updated.status}">${updated.status.toUpperCase()}</span>`;
-      document.getElementById('detailStartBtn').textContent = updated.status === 'running' ? '■ Stop' : '▶ Start';
+  document.getElementById('confirmTitle').textContent = 'Delete File?';
+  document.getElementById('confirmBody').textContent = `Delete "${name}"? This cannot be undone.`;
+  document.getElementById('confirmBtn').onclick = async () => {
+    closeModal('confirmModal');
+    const data = await apiCall(`/api/projects/${id}/files/${encodeURIComponent(name)}`, { method: 'DELETE' });
+    if (data.success) {
+      showToast('File deleted', 'info');
+      await fetchFiles(id);
+    } else {
+      showToast('Failed to delete file', 'error');
     }
-    renderDashboard();
-    renderProjects();
-    showToast(data.message || 'Action completed', 'success');
+  };
+  openModal('confirmModal');
+}
+
+// ============================================================
+// File Editor
+// ============================================================
+async function openFileEditor(filename) {
+  const id = state.currentProjectId;
+  if (!id) return;
+
+  const data = await apiCall(`/api/projects/${id}/files/${encodeURIComponent(filename)}`);
+  if (data.content !== undefined) {
+    state.editingFile = filename;
+    document.querySelectorAll('[id^="page-"]').forEach(el => el.style.display = 'none');
+    document.getElementById('page-file-editor').style.display = 'block';
+    document.getElementById('editorTitle').textContent = 'Editing: ' + filename;
+    document.getElementById('editorFilename').textContent = filename + ' · ' + state.projects.find(x => x.id === id)?.name || '';
+    document.getElementById('editorTextarea').value = data.content;
   } else {
-    showToast(data.error || 'Action failed', 'error');
+    showToast('Failed to load file', 'error');
   }
 }
 
+function backToProject() {
+  state.editingFile = null;
+  document.querySelectorAll('[id^="page-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('page-project-detail').style.display = 'block';
+  state.currentPage = 'project-detail';
+}
+
+async function saveEditorFile() {
+  const id = state.currentProjectId;
+  const filename = state.editingFile;
+  const content = document.getElementById('editorTextarea').value;
+
+  if (!id || !filename) return;
+
+  const data = await apiCall(`/api/projects/${id}/files/${encodeURIComponent(filename)}`, {
+    method: 'PUT',
+    body: JSON.stringify({ content })
+  });
+
+  if (data.success) {
+    showToast('💾 File saved!', 'success');
+  } else {
+    showToast(data.error || 'Failed to save file', 'error');
+  }
+}
+
+// ============================================================
+// File Upload & Drag & Drop
+// ============================================================
+function handleDragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('drag'); }
+function handleDragLeave() { document.getElementById('uploadZone').classList.remove('drag'); }
+function handleDrop(e) { e.preventDefault(); handleFiles(e.dataTransfer.files); document.getElementById('uploadZone').classList.remove('drag'); }
+
+async function handleFiles(files) {
+  const id = state.currentProjectId;
+  if (!id) return;
+
+  for (const file of files) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`/api/projects/${id}/upload`, { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.success) {
+        showToast(`✅ ${file.name} uploaded!`, 'success');
+        await fetchFiles(id);
+      } else if (data.conflict) {
+        // Show conflict modal
+        const conflictList = document.getElementById('conflictFileList');
+        conflictList.innerHTML = data.conflicts.map(f => `<div>⚠️ ${f}</div>`).join('');
+        pendingZipFile = file;
+        openModal('conflictModal');
+      } else {
+        showToast(`❌ ${data.error || 'Upload failed'}`, 'error');
+      }
+    } catch (e) {
+      showToast(`❌ Error uploading ${file.name}`, 'error');
+    }
+  }
+}
+
+async function confirmZipOverwrite() {
+  closeModal('conflictModal');
+  const id = state.currentProjectId;
+  if (!id || !pendingZipFile) return;
+
+  // Re-upload with overwrite flag by re-fetching
+  const formData = new FormData();
+  formData.append('file', pendingZipFile);
+  formData.append('overwrite', 'true');
+
+  try {
+    const res = await fetch(`/api/projects/${id}/upload`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`✅ ${pendingZipFile.name} extracted (overwritten)`, 'success');
+      await fetchFiles(id);
+    } else {
+      showToast(`❌ ${data.error || 'Upload failed'}`, 'error');
+    }
+  } catch (e) {
+    showToast('❌ Upload error', 'error');
+  }
+  pendingZipFile = null;
+}
+
+// ============================================================
+// Packages
+// ============================================================
 async function installPackage() {
   const name = document.getElementById('pkgName').value.trim();
   if (!name) { showToast('Enter a package name', 'error'); return; }
   const id = state.currentProjectId;
   if (!id) return;
-  
+
   showToast(`📦 Installing ${name}...`, 'info');
   const data = await apiCall(`/api/projects/${id}/packages`, {
     method: 'POST',
     body: JSON.stringify({ name })
   });
-  
+
   if (data.success) {
     showToast(`✅ ${name} installed!`, 'success');
     document.getElementById('pkgName').value = '';
@@ -1397,11 +1859,16 @@ async function installPackage() {
   }
 }
 
-function quickPkg(name) { document.getElementById('pkgName').value = name; installPackage(); }
+function quickPkg(name) {
+  document.getElementById('pkgName').value = name;
+  installPackage();
+}
 
 async function renderInstalled() {
   const p = state.projects.find(x => x.id === state.currentProjectId);
-  document.getElementById('installedCount').textContent = (p && p.packages ? p.packages.length : 0) + ' INSTALLED';
+  const count = p && p.packages ? p.packages.length : 0;
+  document.getElementById('installedCount').textContent = count + ' INSTALLED';
+
   const c = document.getElementById('installedList');
   if (!p || !p.packages || !p.packages.length) {
     c.innerHTML = '<div style="color:var(--muted);font-size:12px;font-family:\'Share Tech Mono\',monospace;">No packages installed</div>';
@@ -1434,18 +1901,21 @@ async function uninstallPkg(name) {
   }
 }
 
+// ============================================================
+// Settings
+// ============================================================
 async function saveSettings() {
   const id = state.currentProjectId;
   if (!id) return;
   const command = document.getElementById('mainCmd').value;
   const port = document.getElementById('portField').value;
   const main_file = document.getElementById('mainFile').value;
-  
+
   const data = await apiCall(`/api/projects/${id}/settings`, {
     method: 'POST',
     body: JSON.stringify({ command, port: parseInt(port), main_file })
   });
-  
+
   if (data.success) {
     document.getElementById('detailCmd').textContent = command;
     showToast('Settings saved', 'success');
@@ -1464,23 +1934,11 @@ async function saveSiteName() {
   });
   if (data.success) {
     state.siteName = name;
-    document.querySelector('.logo').textContent = '👑 ' + name;
+    const logoEl = document.querySelector('.logo');
+    if (logoEl) {
+      logoEl.innerHTML = '<div class="logo-icon">👑</div> ' + name;
+    }
     showToast('Site name updated', 'success');
-  }
-}
-
-async function changeAdminPass() {
-  const newPass = document.getElementById('newAdminPass').value;
-  if (!newPass) { showToast('Enter new password', 'error'); return; }
-  const data = await apiCall('/api/change_password', {
-    method: 'POST',
-    body: JSON.stringify({ current_password: 'Hosting', new_password: newPass })
-  });
-  if (data.success) {
-    document.getElementById('newAdminPass').value = '';
-    showToast('✅ Admin password changed!', 'success');
-  } else {
-    showToast(data.error || 'Failed to change password', 'error');
   }
 }
 
@@ -1488,6 +1946,7 @@ async function changeMyPassword() {
   const current = document.getElementById('currentPass').value;
   const newPass = document.getElementById('newUserPass').value;
   if (!current || !newPass) { showToast('Enter both passwords', 'error'); return; }
+  if (newPass.length < 4) { showToast('Password must be at least 4 characters', 'error'); return; }
   const data = await apiCall('/api/change_password', {
     method: 'POST',
     body: JSON.stringify({ current_password: current, new_password: newPass })
@@ -1501,13 +1960,112 @@ async function changeMyPassword() {
   }
 }
 
+// ============================================================
+// Live Logs
+// ============================================================
+function appendToLogBox(data) {
+  const box = document.getElementById('logBox');
+  if (!box) return;
+
+  // Remove the "No logs" placeholder if present
+  const firstChild = box.firstChild;
+  if (firstChild && firstChild.textContent.includes('No logs yet')) {
+    box.innerHTML = '';
+  }
+
+  const lines = data.split('\n');
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const div = document.createElement('div');
+    div.className = 'log-line info';
+    div.textContent = `[${new Date().toLocaleTimeString()}] ${line}`;
+    box.appendChild(div);
+  }
+
+  // Auto-scroll to bottom
+  box.scrollTop = box.scrollHeight;
+
+  // Trim to last 200 lines
+  while (box.children.length > 200) {
+    box.removeChild(box.firstChild);
+  }
+}
+
 function clearLogs() {
   document.getElementById('logBox').innerHTML = '<div class="log-line muted">Logs cleared.</div>';
   showToast('Logs cleared', 'info');
 }
 
-function refreshLogs() {
-  showToast('Logs refreshed', 'info');
+async function refreshLogs() {
+  const id = state.currentProjectId;
+  if (!id) return;
+  const data = await apiCall(`/api/projects/${id}/logs`);
+  const box = document.getElementById('logBox');
+  box.innerHTML = '';
+  if (data && data.length) {
+    data.forEach(log => {
+      const div = document.createElement('div');
+      div.className = 'log-line ' + (log.type || 'info');
+      div.textContent = log.message || '';
+      box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+    showToast('Logs refreshed', 'info');
+  } else {
+    box.innerHTML = '<div class="log-line muted">No logs available.</div>';
+  }
+}
+
+// ============================================================
+// Live Terminal (with keyboard input)
+// ============================================================
+function appendToTerminal(data) {
+  const box = document.getElementById('terminalBox');
+  if (!box) return;
+
+  const lines = data.split('\n');
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const div = document.createElement('div');
+    div.className = 'terminal-line stdout';
+    div.textContent = line;
+    box.appendChild(div);
+  }
+
+  box.scrollTop = box.scrollHeight;
+
+  // Trim to last 500 lines
+  while (box.children.length > 500) {
+    box.removeChild(box.firstChild);
+  }
+}
+
+function sendTerminalCommand() {
+  const input = document.getElementById('terminalInput');
+  const command = input.value;
+  if (!command.trim()) return;
+
+  const id = state.currentProjectId;
+  if (!id) return;
+
+  // Display the command locally
+  const box = document.getElementById('terminalBox');
+  if (box) {
+    const div = document.createElement('div');
+    div.className = 'terminal-line' + (command.startsWith('#') ? ' muted' : '');
+    div.textContent = '$ ' + command;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  // Send via WebSocket
+  socket.emit('terminal_input', {
+    project_id: id,
+    data: command + '\n'
+  });
+
+  input.value = '';
+  input.focus();
 }
 
 function clearTerminal() {
@@ -1515,31 +2073,23 @@ function clearTerminal() {
   showToast('Terminal cleared', 'info');
 }
 
-function installAllPackages() {
-  const pkgs = ['flask', 'django', 'discord.py', 'fastapi', 'requests', 'aiohttp', 
-                'python-telegram-bot', 'tweepy', 'pandas', 'numpy', 'openai', 'langchain'];
-  let i = 0;
-  showToast(`📦 Installing ${pkgs.length} packages...`, 'info');
-  const interval = setInterval(() => {
-    if (i < pkgs.length) {
-      showToast(`✅ ${pkgs[i]} installed`, 'success');
-      i++;
-    } else {
-      clearInterval(interval);
-      showToast('🎉 All packages installed!', 'success');
-    }
-  }, 500);
-}
+// ============================================================
+// User Management
+// ============================================================
+function openAddUser() { openModal('addUserModal'); }
 
 async function addUser() {
   const username = document.getElementById('newUsername').value.trim();
   const email = document.getElementById('newUserEmail').value.trim();
   const password = document.getElementById('newUserPassword').value;
   if (!username || !email || !password) { showToast('All fields required', 'error'); return; }
+  if (username.length < 3) { showToast('Username must be at least 3 characters', 'error'); return; }
+
   const data = await apiCall('/api/register', {
     method: 'POST',
     body: JSON.stringify({ username, email, password })
   });
+
   if (data.success) {
     closeModal('addUserModal');
     document.getElementById('newUsername').value = '';
@@ -1554,62 +2104,143 @@ async function addUser() {
   }
 }
 
-function openAddUser() { openModal('addUserModal'); }
-
-async function deleteUser(username) {
-  if (!confirm('Delete user ' + username + '?')) return;
-  const data = await apiCall(`/api/users/${username}`, { method: 'DELETE' });
-  if (data.success) {
-    showToast('User deleted', 'info');
-    await fetchUsers();
-    renderUsers();
-    renderDashboard();
-  } else {
-    showToast('Failed to delete user', 'error');
-  }
+function confirmDeleteUser(username) {
+  document.getElementById('confirmTitle').textContent = 'Delete User?';
+  document.getElementById('confirmBody').textContent = `Delete user "${username}"? They will lose access to the panel.`;
+  document.getElementById('confirmBtn').onclick = async () => {
+    closeModal('confirmModal');
+    const data = await apiCall(`/api/users/${username}`, { method: 'DELETE' });
+    if (data.success) {
+      showToast('User deleted', 'info');
+      await fetchUsers();
+      renderUsers();
+      renderDashboard();
+    } else {
+      showToast('Failed to delete user', 'error');
+    }
+  };
+  openModal('confirmModal');
 }
 
-function handleDragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('drag'); }
-function handleDragLeave() { document.getElementById('uploadZone').classList.remove('drag'); }
-function handleDrop(e) { e.preventDefault(); handleFiles(e.dataTransfer.files); document.getElementById('uploadZone').classList.remove('drag'); }
+// ============================================================
+// Bulk Package Installer
+// ============================================================
+async function installAllPackages() {
+  const pkgs = ['flask', 'django', 'discord.py', 'fastapi', 'requests', 'aiohttp',
+                'python-telegram-bot', 'tweepy', 'pandas', 'numpy', 'openai', 'langchain'];
 
-async function handleFiles(files) {
   const id = state.currentProjectId;
-  if (!id) return;
-  for (const file of files) {
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const res = await fetch(`/api/projects/${id}/upload`, { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.success) {
-        showToast(`✅ ${file.name} uploaded!`, 'success');
-        await fetchFiles(id);
-      } else {
-        showToast(`❌ Failed to upload ${file.name}`, 'error');
-      }
-    } catch (e) {
-      showToast(`❌ Error uploading ${file.name}`, 'error');
+  if (!id) { showToast('Open a project first', 'error'); return; }
+
+  showToast(`📦 Installing ${pkgs.length} packages...`, 'info');
+
+  for (const pkg of pkgs) {
+    const data = await apiCall(`/api/projects/${id}/packages`, {
+      method: 'POST',
+      body: JSON.stringify({ name: pkg })
+    });
+    if (data.success) {
+      showToast(`✅ ${pkg} installed`, 'success');
+    } else {
+      showToast(`⚠️ ${pkg}: ${data.error || 'skipped'}`, 'warn');
     }
   }
+
+  await fetchProjects();
+  renderInstalled();
+  showToast('🎉 Package installation complete!', 'success');
 }
 
-document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); });
+// ============================================================
+// Reset All Data (Danger Zone)
+// ============================================================
+function resetAllData() {
+  document.getElementById('confirmTitle').textContent = '⚠️ DANGER: Reset All Data';
+  document.getElementById('confirmBody').innerHTML = `
+    <div style="color:var(--red);font-weight:600;margin-bottom:10px;">This will permanently delete ALL projects, files, and user data except the admin account.</div>
+    <div style="font-size:12px;color:var(--muted);">Type <strong style="color:var(--accent);">RESET</strong> in the box below to confirm:</div>
+    <input class="input-field" id="resetConfirmInput" placeholder="Type RESET here" style="width:100%;margin-top:8px;">
+  `;
+  document.getElementById('confirmBtn').className = 'btn btn-danger';
+  document.getElementById('confirmBtn').textContent = 'Reset Everything';
+  document.getElementById('confirmBtn').onclick = () => {
+    const input = document.getElementById('resetConfirmInput');
+    if (input.value === 'RESET') {
+      closeModal('confirmModal');
+      performReset();
+    } else {
+      showToast('Type RESET to confirm', 'error');
+    }
+  };
+  openModal('confirmModal');
+}
+
+async function performReset() {
+  // Delete all projects
+  for (const p of state.projects) {
+    await apiCall(`/api/projects/${p.id}`, { method: 'DELETE' });
+  }
+  showToast('All projects deleted', 'info');
+
+  // Reset site name
+  await apiCall('/api/site_name', {
+    method: 'POST',
+    body: JSON.stringify({ name: 'NIROB PANEL' })
+  });
+
+  // Turn off maintenance
+  if (state.maintenance) {
+    await apiCall('/api/maintenance', { method: 'POST' });
+  }
+
+  await fetchProjects();
+  await fetchUsers();
+  await fetchSiteName();
+  await fetchMaintenance();
+  renderDashboard();
+  renderProjects();
+  showToast('✅ Panel has been reset!', 'success');
+  document.getElementById('confirmBtn').className = 'btn btn-danger';
+  document.getElementById('confirmBtn').textContent = 'Confirm';
+}
+
+// ============================================================
+// System Stats Polling
+// ============================================================
+setInterval(fetchSystemStats, 5000);
+
+// ============================================================
+// Keyboard Shortcuts
+// ============================================================
+document.addEventListener('keydown', (e) => {
+  // Ctrl+Enter to send terminal command
+  if (e.key === 'Enter' && e.ctrlKey && state.currentTab === 'terminal') {
+    sendTerminalCommand();
+  }
+  // Escape to close modals
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+  }
+  // Ctrl+S to save file editor
+  if (e.key === 's' && (e.ctrlKey || e.metaKey) && state.editingFile) {
+    e.preventDefault();
+    saveEditorFile();
+  }
 });
 
-setInterval(() => {
-  const cpu = (Math.random() * 30 + 5).toFixed(1);
-  const ram = (Math.random() * 30 + 30).toFixed(1);
-  document.getElementById('cpuVal').textContent = cpu + '%';
-  document.getElementById('ramVal').textContent = ram + '%';
-  document.getElementById('hCpu').textContent = cpu + '%';
-  document.getElementById('hRam').textContent = ram + '%';
-  document.getElementById('cpuBar').style.width = cpu + '%';
-  document.getElementById('ramBar').style.width = ram + '%';
-}, 3000);
+// ============================================================
+// Modal close on backdrop click
+// ============================================================
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => {
+    if (e.target === o) o.classList.remove('show');
+  });
+});
 
+// ============================================================
+// Init
+// ============================================================
 init();
 </script>
 </body>
-  </html>
+</html>
