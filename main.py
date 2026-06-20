@@ -531,4 +531,9 @@ def change_password():
 # RUN
 # ============================================================
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    # Render assigns a dynamic port via environment variables.
+    # This reads that port or defaults to 5000 if running locally.
+    port = int(os.environ.get("PORT", 5000))
+    
+    # Setting debug=False tells Flask-SocketIO to safely use Eventlet in production
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)
