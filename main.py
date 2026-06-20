@@ -3,6 +3,11 @@
 # Version: 5.0 VIP
 # ============================================================
 
+# Eventlet monkey patching MUST happen at the very top of the file
+# before importing Flask or any other standard/third-party modules.
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, render_template, request, jsonify, session
 from flask_socketio import SocketIO
 import os
@@ -531,9 +536,8 @@ def change_password():
 # RUN
 # ============================================================
 if __name__ == '__main__':
-    # Render assigns a dynamic port via environment variables.
-    # This reads that port or defaults to 5000 if running locally.
+    # Grab the port assigned dynamically by Render, fallback to 5000 locally
     port = int(os.environ.get("PORT", 5000))
     
-    # Setting debug=False tells Flask-SocketIO to safely use Eventlet in production
+    # debug=False disables Werkzeug checks so eventlet safely takes over
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
