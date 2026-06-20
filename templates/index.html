@@ -3,8 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NIROB PANEL — Enterprise</title>
+<title>NIROB PANEL — Enterprise v7</title>
+<!-- Socket.IO for WebSocket -->
 <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<!-- xterm.js for proper terminal emulation -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.min.js"></script>
+<!-- xterm addon for fit -->
+<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+<!-- xterm addon for web links -->
+<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-web-links@0.10.0/lib/addon-web-links.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -271,7 +279,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 18px;
   }
-  .proj-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; color: var(--accent); }
+  .proj-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
   .proj-cmd { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--muted); }
   .proj-actions { margin-left: auto; display: flex; gap: 8px; }
 
@@ -297,6 +305,12 @@
     color: var(--red);
     border: 1px solid rgba(248,113,113,0.4);
   }
+  .status-badge.restarting {
+    background: rgba(252,211,77,0.15);
+    color: var(--gold);
+    border: 1px solid rgba(252,211,77,0.3);
+    animation: runPulse 1s ease-in-out infinite;
+  }
 
   .btn {
     padding: 8px 18px; border-radius: 8px;
@@ -311,6 +325,7 @@
     box-shadow: 0 0 30px var(--glow);
   }
   .btn-primary:hover { box-shadow: 0 0 50px var(--glow); transform: translateY(-2px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   .btn-ghost {
     background: transparent;
     border: 1px solid var(--border);
@@ -372,11 +387,12 @@
   .file-ext.txt { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
   .file-ext.json { background: rgba(245,158,11,0.15); color: var(--gold); border: 1px solid rgba(245,158,11,0.3); }
   .file-ext.html { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  .file-ext.sh { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
   .file-name { font-size: 13px; font-weight: 500; color: var(--text); }
   .file-size { font-size: 11px; color: var(--muted); }
   .file-actions { margin-left: auto; display: flex; gap: 6px; }
 
-  .log-box, .terminal-box {
+  .log-box {
     background: #020409;
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -386,35 +402,33 @@
     min-height: 250px; max-height: 450px;
     overflow-y: auto;
     line-height: 1.8;
-    position: relative;
   }
-  .log-line, .terminal-line { margin-bottom: 2px; white-space: pre-wrap; word-break: break-all; }
-  .log-line.success, .terminal-line.success { color: var(--green); }
-  .log-line.error, .terminal-line.error { color: var(--red); }
-  .log-line.info, .terminal-line.info { color: var(--accent); }
-  .log-line.muted, .terminal-line.muted { color: var(--muted); }
-  .log-line.stdout, .terminal-line.stdout { color: #e8e8f0; }
-  .log-line.stderr, .terminal-line.stderr { color: var(--red); }
+  .log-line { margin-bottom: 2px; white-space: pre-wrap; word-break: break-all; }
+  .log-line.success { color: var(--green); }
+  .log-line.error { color: var(--red); }
+  .log-line.info { color: var(--accent); }
+  .log-line.muted { color: var(--muted); }
+  .log-line.stdout { color: #e8e8f0; }
 
-  /* Terminal input bar */
-  .terminal-input-row {
-    display: flex; gap: 8px; margin-top: 12px;
-    align-items: center;
-  }
-  .terminal-input-row .input-field {
-    flex: 1;
-    background: rgba(255,255,255,0.04);
+  /* xterm.js overrides */
+  .terminal-wrapper {
+    background: #020409;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: var(--text); font-size: 13px;
-    font-family: 'Share Tech Mono', monospace;
-    outline: none; transition: all 0.2s;
+    border-radius: 12px;
+    padding: 8px;
+    min-height: 300px;
   }
-  .terminal-input-row .input-field:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--glow);
+  .terminal-wrapper .xterm {
+    padding: 8px;
+    height: 100%;
   }
+  .terminal-wrapper .xterm-viewport {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .terminal-wrapper .xterm-viewport::-webkit-scrollbar { width: 6px; }
+  .terminal-wrapper .xterm-viewport::-webkit-scrollbar-track { background: transparent; }
+  .terminal-wrapper .xterm-viewport::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
   .pkg-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
   .pkg-tag {
@@ -438,6 +452,7 @@
     outline: none; transition: all 0.2s;
   }
   .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
+  .input-field:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .progress-bar {
     width: 100%; height: 6px;
@@ -458,7 +473,7 @@
     border: 1px solid var(--border);
     border-radius: 12px; padding: 16px;
   }
-  .res-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); margin-bottom: 8px; }
+  .res-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); margin-bottom: 8px; font-family: 'Share Tech Mono', monospace; }
   .res-val {
     font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 700;
     margin-bottom: 4px;
@@ -504,6 +519,7 @@
   .toast.success { border-color: rgba(52,211,153,0.4); }
   .toast.error { border-color: rgba(248,113,113,0.4); }
   .toast.info { border-color: rgba(255,107,157,0.4); }
+  .toast.warn { border-color: rgba(252,211,77,0.4); }
 
   .tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
   .tab {
@@ -565,7 +581,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 14px; font-weight: 700;
   }
-  .user-info-name { font-size: 13px; font-weight: 600; color: var(--accent); }
+  .user-info-name { font-size: 13px; font-weight: 600; }
   .user-info-stats { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .user-row-actions { margin-left: auto; display: flex; gap: 8px; }
 
@@ -577,7 +593,6 @@
   }
   .color-swatch:hover, .color-swatch.active { border-color: white; transform: scale(1.1); }
 
-  /* File editor */
   .editor-container {
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -594,7 +609,7 @@
     font-size: 12px; color: var(--accent);
   }
   .editor-textarea {
-    width: 100%; min-height: 300px;
+    width: 100%; min-height: 350px;
     background: #020409;
     border: none;
     color: #e8e8f0;
@@ -656,20 +671,30 @@
   .status-indicator.online .dot { background: var(--green); }
   .status-indicator.offline .dot { background: var(--red); animation: none; }
 
-  .conflict-modal-body {
-    margin: 16px 0;
-    padding: 12px;
-    background: rgba(248,113,113,0.08);
-    border: 1px solid rgba(248,113,113,0.2);
-    border-radius: 8px;
-    max-height: 200px;
-    overflow-y: auto;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
+  .res-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
   }
-  .conflict-modal-body div {
-    padding: 4px 0;
-    color: var(--red);
+  @media(max-width: 900px) {
+    .res-mini-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .critical-badge {
+    display: inline-block;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(252,211,77,0.15);
+    color: var(--gold);
+    border: 1px solid rgba(252,211,77,0.2);
+    font-family: 'Share Tech Mono', monospace;
+    margin-left: 4px;
+  }
+
+  .file-item.critical {
+    border-color: rgba(252,211,77,0.2);
+    background: rgba(252,211,77,0.03);
   }
 </style>
 </head>
@@ -741,9 +766,10 @@
 
   <div class="content" id="contentArea">
 
+    <!-- ==================== DASHBOARD ==================== -->
     <div id="page-dashboard">
       <div class="page-title">Dashboard</div>
-      <div class="page-sub">Welcome back! Your server is running 24/7.</div>
+      <div class="page-sub" id="dashSub">Welcome back! Your server is running 24/7.</div>
 
       <div id="maintenanceBanner" class="maintenance-banner">
         🔧 MAINTENANCE MODE IS ACTIVE
@@ -800,6 +826,7 @@
       </div>
     </div>
 
+    <!-- ==================== PROJECTS LIST ==================== -->
     <div id="page-projects" style="display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
         <div>
@@ -811,16 +838,45 @@
       <div id="projectsList"></div>
     </div>
 
+    <!-- ==================== PROJECT DETAIL ==================== -->
     <div id="page-project-detail" style="display:none;">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap;">
         <button onclick="showPage('projects')" class="btn btn-ghost" style="padding:8px 12px;">← Back</button>
         <div>
-          <div style="font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="detailName">PROJECT</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;" id="detailName">PROJECT</div>
           <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);" id="detailCmd">python main.py</div>
         </div>
         <div id="detailStatus"></div>
         <button id="detailStartBtn" class="btn btn-primary" style="margin-left:auto;" onclick="toggleProject()">▶ Start</button>
         <button id="detailRestartBtn" class="btn btn-ghost" onclick="restartProject()" style="display:none;">↻ Restart</button>
+      </div>
+
+      <!-- Project Status Panel -->
+      <div id="projectStatusPanel" class="section-card" style="margin-bottom:16px;">
+        <div class="section-header">
+          <div class="section-title">Project Health</div>
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 10px;" onclick="renderProjectStatus()">↻ Refresh</button>
+        </div>
+        <div class="section-body">
+          <div class="res-mini-grid">
+            <div class="resource-card" style="padding:12px;">
+              <div class="res-label">STATUS</div>
+              <div class="res-val" id="ps-status" style="font-size:20px;">—</div>
+            </div>
+            <div class="resource-card" style="padding:12px;">
+              <div class="res-label">UPTIME</div>
+              <div class="res-val" id="ps-uptime" style="font-size:20px;color:var(--accent);">—</div>
+            </div>
+            <div class="resource-card" style="padding:12px;">
+              <div class="res-label">RESTARTS</div>
+              <div class="res-val" id="ps-restarts" style="font-size:20px;color:var(--gold);">0</div>
+            </div>
+            <div class="resource-card" style="padding:12px;">
+              <div class="res-label">AUTO RESTART</div>
+              <div class="res-val" id="ps-autorestart" style="font-size:20px;">OFF</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="tabs">
@@ -831,17 +887,19 @@
         <div class="tab" onclick="switchTab('terminal')" id="tab-terminal">🖥️ Terminal</div>
       </div>
 
+      <!-- TAB: Files -->
       <div id="proj-tab-files">
         <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
              ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-          <input type="file" id="fileInput" multiple accept=".py,.js,.ts,.zip,.txt,.html,.json,.yml,.yaml,.md,.css,.sh" onchange="handleFiles(this.files)" style="display:none;">
+          <input type="file" id="fileInput" multiple accept=".py,.js,.ts,.zip,.txt,.html,.json,.yml,.yaml,.md,.css,.sh,.env,.toml" onchange="handleFiles(this.files)" style="display:none;">
           <span class="upload-icon">📂</span>
           <div class="upload-title">Click or drag to upload</div>
-          <div class="upload-sub">Supports: .py, .js, .ts, .zip, .txt, .html, .json, .yml, .md, .css, .sh</div>
+          <div class="upload-sub">ZIP files are flattened automatically · Critical files are protected 🛡️</div>
         </div>
         <div id="fileList" style="margin-top:16px;"></div>
       </div>
 
+      <!-- TAB: Packages -->
       <div id="proj-tab-packages" style="display:none;">
         <div class="section-card">
           <div class="section-header"><div class="section-title">Install Package</div></div>
@@ -873,6 +931,7 @@
         </div>
       </div>
 
+      <!-- TAB: Settings -->
       <div id="proj-tab-settings-proj" style="display:none;">
         <div class="section-card">
           <div class="section-header"><div class="section-title">Project Settings</div></div>
@@ -894,16 +953,17 @@
             <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
               <div class="setting-row">
                 <div>
-                  <div style="font-size:13px;font-weight:600;color:var(--accent);">Auto Reset</div>
-                  <div style="font-size:11px;color:var(--muted);margin-top:2px;">Auto restart on crash or error</div>
+                  <div style="font-size:13px;font-weight:600;">Auto Restart on Crash</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:2px;">Automatically restart the project if it crashes or exits with an error</div>
                 </div>
-                <div class="toggle on" id="autoResetToggle" onclick="this.classList.toggle('on')"></div>
+                <div class="toggle" id="autoResetToggle" onclick="this.classList.toggle('on'); saveSettings()"></div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- TAB: Logs -->
       <div id="proj-tab-logs-proj" style="display:none;">
         <div class="section-card">
           <div class="section-header">
@@ -921,10 +981,11 @@
         </div>
       </div>
 
+      <!-- TAB: Terminal -->
       <div id="proj-tab-terminal" style="display:none;">
         <div class="section-card">
           <div class="section-header">
-            <div class="section-title">Live Terminal</div>
+            <div class="section-title">Live Terminal · xterm.js</div>
             <div style="display:flex;gap:8px;align-items:center;">
               <span class="status-indicator offline" id="terminalStatus">
                 <span class="dot"></span> OFFLINE
@@ -933,37 +994,31 @@
             </div>
           </div>
           <div class="section-body">
-            <div class="terminal-box" id="terminalBox">
-              <div class="terminal-line muted">▼ Terminal ready. Start the project to interact.</div>
-              <div class="terminal-line muted">Type commands below and press Enter to send.</div>
-            </div>
-            <div class="terminal-input-row">
-              <input class="input-field" id="terminalInput" placeholder="Type a command..." disabled
-                     onkeydown="if(event.key==='Enter')sendTerminalCommand()">
-              <button class="btn btn-primary" id="terminalSendBtn" onclick="sendTerminalCommand()" disabled>→ Send</button>
-            </div>
+            <div class="terminal-wrapper" id="terminalContainer"></div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- ==================== FILE EDITOR ==================== -->
     <div id="page-file-editor" style="display:none;">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap;">
         <button onclick="backToProject()" class="btn btn-ghost" style="padding:8px 12px;">← Back</button>
         <div>
-          <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:var(--accent);" id="editorTitle">Editing</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;" id="editorTitle">Editing</div>
         </div>
         <button class="btn btn-primary" style="margin-left:auto;" onclick="saveEditorFile()">💾 Save</button>
       </div>
       <div class="editor-container">
         <div class="editor-header">
           <span class="editor-filename" id="editorFilename">main.py</span>
-          <span style="font-size:10px;color:var(--muted);font-family:'Share Tech Mono',monospace;">UTF-8 · NO BOM</span>
+          <span style="font-size:10px;color:var(--muted);font-family:'Share Tech Mono',monospace;">UTF-8 · Ctrl+S to Save</span>
         </div>
         <textarea class="editor-textarea" id="editorTextarea" spellcheck="false"></textarea>
       </div>
     </div>
 
+    <!-- ==================== USERS ==================== -->
     <div id="page-users" style="display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
         <div>
@@ -975,6 +1030,7 @@
       <div id="usersList"></div>
     </div>
 
+    <!-- ==================== MAINTENANCE ==================== -->
     <div id="page-maintenance" style="display:none;">
       <div class="page-title">Maintenance</div>
       <div class="page-sub">Control server maintenance mode</div>
@@ -999,6 +1055,7 @@
       </div>
     </div>
 
+    <!-- ==================== THEME ==================== -->
     <div id="page-theme" style="display:none;">
       <div class="page-title">Theme</div>
       <div class="page-sub">Customize the UI accent color</div>
@@ -1022,6 +1079,7 @@
       </div>
     </div>
 
+    <!-- ==================== SETTINGS ==================== -->
     <div id="page-settings" style="display:none;">
       <div class="page-title">Settings</div>
       <div class="page-sub">System configuration</div>
@@ -1039,19 +1097,12 @@
             <input class="input-field" id="newUserPass" type="password" placeholder="New Password" style="width:100%;max-width:300px;margin-bottom:10px;">
             <button class="btn btn-primary" onclick="changeMyPassword()">Change Password</button>
           </div>
-          <div style="padding-top:20px;border-top:1px solid var(--border);">
-            <div class="form-label">Install All Packages</div>
-            <button class="btn btn-success" style="padding:12px 24px;font-size:12px;border-radius:10px;" onclick="installAllPackages()">
-              📦 Install All Common Packages
-            </button>
-            <div style="font-size:11px;color:var(--muted);margin-top:8px;">This will install flask, django, discord.py, fastapi, requests, aiohttp, etc.</div>
-          </div>
           <div style="padding-top:20px;border-top:1px solid var(--border);margin-top:20px;">
             <div class="form-label">Danger Zone</div>
-            <button class="btn btn-danger" style="padding:12px 24px;font-size:12px;" onclick="resetAllData()">
+            <button class="btn btn-danger" style="padding:12px 24px;font-size:12px;margin-bottom:8px;" onclick="resetAllData()">
               ⚠️ Reset All Data
             </button>
-            <div style="font-size:11px;color:var(--muted);margin-top:8px;">This will delete ALL projects and reset the panel. Cannot be undone.</div>
+            <div style="font-size:11px;color:var(--muted);">This will delete ALL projects and reset the panel. Cannot be undone.</div>
           </div>
         </div>
       </div>
@@ -1061,6 +1112,8 @@
 </div>
 
 </div>
+
+<!-- ==================== MODALS ==================== -->
 
 <div class="modal-overlay" id="newProjectModal">
   <div class="modal">
@@ -1117,26 +1170,15 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="conflictModal">
-  <div class="modal">
-    <div class="modal-title">⚠️ File Conflict Detected</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">
-      The ZIP file contains files that already exist in this project. Overwrite them?
-    </div>
-    <div class="conflict-modal-body" id="conflictFileList"></div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal('conflictModal'); pendingZipFile = null;">Cancel</button>
-      <button class="btn btn-danger" onclick="confirmZipOverwrite()">Overwrite All</button>
-    </div>
-  </div>
-</div>
-
+<!-- ==================== JAVASCRIPT ==================== -->
 <script>
 // ============================================================
-// NIROB PANEL v6 - Frontend Engine
+// NIROB PANEL v7.0 - Full Frontend Engine
 // ============================================================
 
-const socket = io();
+const socket = io({
+  transports: ['websocket', 'polling']
+});
 
 const state = {
   currentPage: 'dashboard',
@@ -1148,11 +1190,10 @@ const state = {
   siteName: 'NIROB PANEL',
   maintenance: false,
   accentColor: '#ff6b9d',
-  logSubscribed: false
+  logSubscribed: false,
+  terminal: null,
+  terminalFit: null
 };
-
-let pendingZipFile = null;
-let pendingZipOverwrite = false;
 
 const presets = [
   {name:'Pink',color:'#ff6b9d'},{name:'Purple',color:'#a78bfa'},{name:'Blue',color:'#60a5fa'},
@@ -1162,21 +1203,22 @@ const presets = [
 ];
 
 // ============================================================
-// Socket.IO Event Handlers - LIVE TERMINAL & LOGS
+// SOCKET.IO HANDLERS
 // ============================================================
 socket.on('connect', () => {
-  console.log('[WS] Connected');
-  // Subscribe to current project if we're on detail page
+  console.log('[WS] Connected to NIROB Panel');
   if (state.currentProjectId && state.currentPage === 'project-detail') {
     socket.emit('subscribe_project', { project_id: state.currentProjectId });
   }
 });
 
+socket.on('disconnect', () => {
+  showToast('⚠️ WebSocket disconnected. Reconnecting...', 'warn');
+});
+
 socket.on('terminal_output', (data) => {
-  if (data.project_id === state.currentProjectId) {
-    appendToTerminal(data.data);
-    // Also append to logs
-    appendToLogBox(data.data);
+  if (data.project_id === state.currentProjectId && state.terminal) {
+    state.terminal.write(data.data);
   }
 });
 
@@ -1187,22 +1229,30 @@ socket.on('log_update', (data) => {
 });
 
 socket.on('project_status', (data) => {
-  if (data.project_id === state.currentProjectId) {
-    const p = state.projects.find(x => x.id === data.project_id);
-    if (p) {
-      p.status = data.status;
+  const p = state.projects.find(x => x.id === data.project_id);
+  if (p) {
+    p.status = data.status;
+    if (p.id === state.currentProjectId) {
       updateProjectDetailUI(p);
+      updateTerminalStatus(data.status);
     }
   }
-  // Refresh projects
   fetchProjects().then(() => {
     renderDashboard();
     renderProjects();
+    if (state.currentProjectId) renderProjectStatus();
   });
 });
 
+socket.on('project_crash', (data) => {
+  if (data.project_id === state.currentProjectId) {
+    showToast(`💥 Process CRASHED! Exit code: ${data.exit_code}`, 'error');
+    // The health monitor handles auto-restart or stop automatically
+  }
+});
+
 // ============================================================
-// API Helper
+// API HELPER
 // ============================================================
 async function apiCall(url, options = {}) {
   try {
@@ -1210,15 +1260,14 @@ async function apiCall(url, options = {}) {
       ...options,
       headers: { 'Content-Type': 'application/json', ...options.headers }
     });
-    const data = await res.json();
-    return data;
+    return await res.json();
   } catch (e) {
     return { error: 'Network error' };
   }
 }
 
 // ============================================================
-// Data Fetching
+// DATA FETCHING
 // ============================================================
 async function fetchProjects() {
   const data = await apiCall('/api/projects');
@@ -1273,8 +1322,10 @@ async function fetchSystemStats() {
   } catch (e) { /* ignore */ }
 }
 
+// ============================================================
+// INIT
+// ============================================================
 async function init() {
-  // Get logged in user info
   const me = await apiCall('/api/me');
   if (me.username) {
     document.getElementById('sidebarName').textContent = '@' + me.username;
@@ -1293,11 +1344,11 @@ async function init() {
 
   renderDashboard();
   renderTheme();
-  showToast('🚀 Welcome to NIROB Panel!', 'success');
+  showToast('🚀 NIROB Panel v7 is ready!', 'success');
 }
 
 // ============================================================
-// Toast Notifications
+// TOAST
 // ============================================================
 function showToast(msg, type = 'info') {
   const icons = { success: '✅', error: '❌', info: 'ℹ️', warn: '⚠️' };
@@ -1313,7 +1364,7 @@ function showToast(msg, type = 'info') {
 }
 
 // ============================================================
-// Page Navigation
+// PAGE NAVIGATION
 // ============================================================
 function showPage(page) {
   document.querySelectorAll('[id^="page-"]').forEach(p => p.style.display = 'none');
@@ -1334,7 +1385,7 @@ function showPage(page) {
 }
 
 // ============================================================
-// Dashboard
+// DASHBOARD
 // ============================================================
 function renderDashboard() {
   const running = state.projects.filter(p => p.status === 'running').length;
@@ -1359,22 +1410,26 @@ function renderDashboard() {
       <div>
         <div class="proj-name">${p.name}</div>
         <div class="proj-cmd">${p.command || 'python main.py'}</div>
-        <div class="run-counter"><div class="run-dot" style="background:${p.status === 'running' ? 'var(--green)' : 'var(--red)'}"></div>${p.files ? p.files.length : 0} files</div>
+        <div class="run-counter">
+          <div class="run-dot" style="background:${p.status === 'running' ? 'var(--green)' : p.status === 'error' ? 'var(--red)' : 'var(--muted)'}"></div>
+          ${p.files ? p.files.length : 0} files
+          ${p.uptime ? ' · ☝️ ' + p.uptime : ''}
+        </div>
       </div>
       <div class="proj-actions">
-        <span class="status-badge ${p.status}">${(p.status || 'stopped').toUpperCase()}</span>
+        <span class="status-badge ${p.status || 'stopped'}">${(p.status || 'stopped').toUpperCase()}</span>
       </div>
     </div>
   `).join('');
 }
 
 // ============================================================
-// Projects List
+// PROJECTS LIST
 // ============================================================
 function renderProjects() {
   const c = document.getElementById('projectsList');
   if (!state.projects.length) {
-    c.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:40px;">No projects yet. Create one!</div>';
+    c.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:40px;">No projects yet.</div>';
     return;
   }
   c.innerHTML = state.projects.map(p => `
@@ -1383,81 +1438,176 @@ function renderProjects() {
       <div style="flex:1;">
         <div class="proj-name">${p.name}</div>
         <div class="proj-cmd">${p.command || 'python main.py'}</div>
-        <div class="run-counter"><div class="run-dot" style="background:${p.status === 'running' ? 'var(--green)' : 'var(--red)'}"></div>${p.files ? p.files.length : 0} files</div>
+        <div class="run-counter">
+          <div class="run-dot" style="background:${p.status === 'running' ? 'var(--green)' : 'var(--red)'}"></div>
+          ${p.files ? p.files.length : 0} files · ${p.packages ? p.packages.length : 0} packages
+        </div>
       </div>
-      <span class="status-badge ${p.status}">${(p.status || 'stopped').toUpperCase()}</span>
+      <span class="status-badge ${p.status || 'stopped'}">${(p.status || 'stopped').toUpperCase()}</span>
       <div style="display:flex;gap:6px;margin-left:8px;">
-        <button class="btn btn-ghost" onclick="openProject('${p.id}')" style="font-size:11px;padding:5px 10px;">View</button>
-        <button class="btn btn-danger" onclick="confirmDeleteProject('${p.id}', '${p.name}')" style="font-size:11px;padding:5px 10px;">🗑</button>
+        <button class="btn btn-ghost" onclick="event.stopPropagation();openProject('${p.id}')" style="font-size:11px;padding:5px 10px;">View</button>
+        <button class="btn btn-danger" onclick="event.stopPropagation();confirmDeleteProject('${p.id}', '${p.name}')" style="font-size:11px;padding:5px 10px;">🗑</button>
       </div>
     </div>
   `).join('');
 }
 
 // ============================================================
-// Users
+// PROJECT DETAIL
 // ============================================================
-function renderUsers() {
-  const c = document.getElementById('usersList');
-  if (!state.users.length) {
-    c.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No users registered.</div>';
-    return;
+async function openProject(id) {
+  state.currentProjectId = id;
+  state.logSubscribed = false;
+  destroyTerminal();
+
+  const p = state.projects.find(x => x.id === id);
+  if (!p) return;
+
+  document.querySelectorAll('[id^="page-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('page-project-detail').style.display = 'block';
+  state.currentPage = 'project-detail';
+
+  updateProjectDetailUI(p);
+
+  document.getElementById('mainFile').value = p.main_file || 'main.py';
+  document.getElementById('mainCmd').value = p.command || 'python main.py';
+  document.getElementById('portField').value = p.port || '8080';
+
+  const autoToggle = document.getElementById('autoResetToggle');
+  if (autoToggle) autoToggle.classList.toggle('on', p.auto_restart === true);
+
+  switchTab('files');
+  await fetchFiles(id);
+  renderInstalled();
+  renderProjectStatus();
+
+  socket.emit('subscribe_project', { project_id: id });
+  state.logSubscribed = true;
+  updateTerminalStatus(p.status);
+}
+
+function updateProjectDetailUI(p) {
+  document.getElementById('detailName').textContent = p.name;
+  document.getElementById('detailCmd').textContent = p.command || 'python main.py';
+  document.getElementById('detailStatus').innerHTML = `<span class="status-badge ${p.status || 'stopped'}">${(p.status || 'stopped').toUpperCase()}</span>`;
+  document.getElementById('detailStartBtn').textContent = p.status === 'running' ? '■ Stop' : '▶ Start';
+  document.getElementById('detailRestartBtn').style.display = p.status === 'running' ? 'inline-block' : 'none';
+  updateTerminalStatus(p.status);
+}
+
+function updateTerminalStatus(status) {
+  const ts = document.getElementById('terminalStatus');
+  if (status === 'running') {
+    ts.className = 'status-indicator online';
+    ts.innerHTML = '<span class="dot"></span> ONLINE';
+    initTerminal();
+  } else {
+    ts.className = 'status-indicator offline';
+    ts.innerHTML = '<span class="dot"></span> OFFLINE';
   }
-  c.innerHTML = state.users.map(u => `
-    <div class="user-row">
-      <div class="user-row-avatar">${(u.username || '?').charAt(0).toUpperCase()}</div>
-      <div>
-        <div class="user-info-name">${u.username}</div>
-        <div class="user-info-stats">${u.email || ''} · ${u.role || 'user'}</div>
-      </div>
-      <div class="user-row-actions">
-        ${u.username !== 'xNIROB' ? `<button class="btn btn-danger" style="font-size:10px;padding:5px 10px;" onclick="confirmDeleteUser('${u.username}')">Delete</button>` : '<span style="font-size:10px;color:var(--gold);font-family:Share Tech Mono,monospace;">OWNER</span>'}
-      </div>
-    </div>
-  `).join('');
 }
 
 // ============================================================
-// Theme
+// XTERM.JS TERMINAL
 // ============================================================
-function renderTheme() {
-  const g = document.getElementById('colorSwatches');
-  g.innerHTML = presets.map(p => `
-    <div class="color-swatch ${state.accentColor === p.color ? 'active' : ''}"
-         style="background:${p.color};box-shadow:0 0 10px ${p.color}40"
-         onclick="applyColor('${p.color}', this)" title="${p.name}"></div>
-  `).join('');
-  // Update current display
-  document.getElementById('currentColorDot').style.background = state.accentColor;
-  document.getElementById('currentColorDot').style.boxShadow = '0 0 15px ' + state.accentColor + '40';
-  document.getElementById('currentColorHex').textContent = state.accentColor;
-  document.getElementById('colorHexInput').value = state.accentColor;
-  document.getElementById('colorPicker').value = state.accentColor;
+function initTerminal() {
+  const container = document.getElementById('terminalContainer');
+  if (!container) return;
+
+  // Destroy existing terminal if any
+  if (state.terminal) {
+    state.terminal.dispose();
+    state.terminal = null;
+  }
+
+  container.innerHTML = '';
+
+  try {
+    state.terminal = new Terminal({
+      cursorBlink: true,
+      cursorStyle: 'block',
+      fontSize: 13,
+      fontFamily: "'Share Tech Mono', 'Courier New', monospace",
+      theme: {
+        background: '#020409',
+        foreground: '#e8e8f0',
+        cursor: '#ff6b9d',
+        cursorAccent: '#0a0a0f',
+        selectionBackground: '#ff6b9d40',
+        black: '#000000',
+        red: '#f87171',
+        green: '#34d399',
+        yellow: '#fcd34d',
+        blue: '#60a5fa',
+        magenta: '#c084fc',
+        cyan: '#22d3ee',
+        white: '#e8e8f0',
+        brightBlack: '#555577',
+        brightRed: '#f87171',
+        brightGreen: '#34d399',
+        brightYellow: '#fcd34d',
+        brightBlue: '#60a5fa',
+        brightMagenta: '#c084fc',
+        brightCyan: '#22d3ee',
+        brightWhite: '#ffffff'
+      },
+      allowTransparency: false,
+      scrollback: 5000,
+      allowProposedApi: true
+    });
+
+    state.terminalFit = new FitAddon.FitAddon();
+    state.terminal.loadAddon(state.terminalFit);
+    state.terminal.open(container);
+    state.terminalFit.fit();
+
+    // Write welcome message
+    state.terminal.write('\x1b[1;38;2;255;107;157m╔══════════════════════════════════════╗\x1b[0m\r\n');
+    state.terminal.write('\x1b[1;38;2;255;107;157m║\x1b[0m  \x1b[1;38;2;192;132;252mNIROB PANEL v7 Terminal\x1b[0m         \x1b[1;38;2;255;107;157m║\x1b[0m\r\n');
+    state.terminal.write('\x1b[1;38;2;255;107;157m╚══════════════════════════════════════╝\x1b[0m\r\n\n');
+
+    // Handle keyboard input
+    state.terminal.onData((data) => {
+      if (state.currentProjectId) {
+        socket.emit('terminal_input', {
+          project_id: state.currentProjectId,
+          data: data
+        });
+      }
+    });
+
+    // Resize handler
+    window.addEventListener('resize', () => {
+      if (state.terminalFit) {
+        try { state.terminalFit.fit(); } catch(e) {}
+      }
+    });
+
+  } catch (e) {
+    console.error('Terminal init error:', e);
+    container.innerHTML = '<div style="color:var(--red);padding:20px;font-family:monospace;">⚠️ Terminal failed to initialize. Please check your browser console.</div>';
+  }
 }
 
-function applyColor(hex, el) {
-  state.accentColor = hex;
-  document.documentElement.style.setProperty('--accent', hex);
-  document.documentElement.style.setProperty('--glow', hex + '40');
-  document.getElementById('currentColorDot').style.background = hex;
-  document.getElementById('currentColorDot').style.boxShadow = '0 0 15px ' + hex;
-  document.getElementById('currentColorHex').textContent = hex;
-  document.getElementById('colorHexInput').value = hex;
-  document.getElementById('colorPicker').value = hex;
-  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-  if (el) el.classList.add('active');
-  showToast('Theme color updated', 'success');
+function destroyTerminal() {
+  if (state.terminal) {
+    try {
+      state.terminal.dispose();
+    } catch(e) {}
+    state.terminal = null;
+    state.terminalFit = null;
+  }
 }
 
-function applyCustomColor() {
-  const hex = document.getElementById('colorHexInput').value.trim();
-  if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) { showToast('Invalid hex color', 'error'); return; }
-  applyColor(hex, null);
-  renderTheme();
+function clearTerminal() {
+  if (state.terminal) {
+    state.terminal.clear();
+    showToast('Terminal cleared', 'info');
+  }
 }
 
 // ============================================================
-// Tab Switching
+// TAB SWITCHING
 // ============================================================
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1471,37 +1621,33 @@ function switchTab(tab) {
 
   state.currentTab = tab;
 
-  // When switching to terminal, focus the input if project is running
   if (tab === 'terminal') {
     const p = state.projects.find(x => x.id === state.currentProjectId);
     if (p && p.status === 'running') {
-      document.getElementById('terminalInput').disabled = false;
-      document.getElementById('terminalSendBtn').disabled = false;
-      document.getElementById('terminalInput').focus();
+      initTerminal();
     }
+    // Fit terminal after switching to it
+    setTimeout(() => {
+      if (state.terminalFit) {
+        try { state.terminalFit.fit(); } catch(e) {}
+      }
+    }, 100);
   }
 
-  // When switching to logs, subscribe for live updates
-  if (tab === 'logs-proj') {
-    if (state.currentProjectId && !state.logSubscribed) {
-      socket.emit('subscribe_project', { project_id: state.currentProjectId });
-      state.logSubscribed = true;
-    }
+  if (tab === 'logs-proj' && state.currentProjectId && !state.logSubscribed) {
+    socket.emit('subscribe_project', { project_id: state.currentProjectId });
+    state.logSubscribed = true;
   }
 }
 
 // ============================================================
-// Modals
+// MODALS
 // ============================================================
-function openModal(id) {
-  document.getElementById(id).classList.add('show');
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove('show');
-}
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
 // ============================================================
-// Auth
+// AUTH
 // ============================================================
 async function handleLogout() {
   await apiCall('/api/logout', { method: 'POST' });
@@ -1519,7 +1665,7 @@ async function toggleMaintenance() {
 }
 
 // ============================================================
-// Project CRUD
+// PROJECT CRUD
 // ============================================================
 function openNewProject() { openModal('newProjectModal'); }
 
@@ -1564,65 +1710,17 @@ function confirmDeleteProject(id, name) {
   openModal('confirmModal');
 }
 
-async function openProject(id) {
-  state.currentProjectId = id;
-  state.logSubscribed = false;
-  const p = state.projects.find(x => x.id === id);
-  if (!p) return;
-
-  document.querySelectorAll('[id^="page-"]').forEach(el => el.style.display = 'none');
-  document.getElementById('page-project-detail').style.display = 'block';
-  state.currentPage = 'project-detail';
-
-  updateProjectDetailUI(p);
-
-  document.getElementById('mainFile').value = p.main_file || 'main.py';
-  document.getElementById('mainCmd').value = p.command || 'python main.py';
-  document.getElementById('portField').value = p.port || '8080';
-
-  switchTab('files');
-  await fetchFiles(id);
-  renderInstalled();
-
-  // Subscribe to WebSocket for live updates
-  socket.emit('subscribe_project', { project_id: id });
-  state.logSubscribed = true;
-
-  // Update terminal status
-  updateTerminalStatus(p.status);
-}
-
-function updateProjectDetailUI(p) {
-  document.getElementById('detailName').textContent = p.name;
-  document.getElementById('detailCmd').textContent = p.command || 'python main.py';
-  document.getElementById('detailStatus').innerHTML = `<span class="status-badge ${p.status || 'stopped'}">${(p.status || 'stopped').toUpperCase()}</span>`;
-  document.getElementById('detailStartBtn').textContent = p.status === 'running' ? '■ Stop' : '▶ Start';
-  document.getElementById('detailRestartBtn').style.display = p.status === 'running' ? 'inline-block' : 'none';
-  updateTerminalStatus(p.status);
-}
-
-function updateTerminalStatus(status) {
-  const ts = document.getElementById('terminalStatus');
-  if (status === 'running') {
-    ts.className = 'status-indicator online';
-    ts.innerHTML = '<span class="dot"></span> ONLINE';
-    document.getElementById('terminalInput').disabled = false;
-    document.getElementById('terminalSendBtn').disabled = false;
-  } else {
-    ts.className = 'status-indicator offline';
-    ts.innerHTML = '<span class="dot"></span> OFFLINE';
-    document.getElementById('terminalInput').disabled = true;
-    document.getElementById('terminalSendBtn').disabled = true;
-  }
-}
-  // ============================================================
-// Project Start/Stop/Restart
+// ============================================================
+// PROJECT START/STOP/RESTART
 // ============================================================
 async function toggleProject() {
   const p = state.projects.find(x => x.id === state.currentProjectId);
   if (!p) return;
 
   const action = p.status === 'running' ? 'stop' : 'start';
+  document.getElementById('detailStartBtn').disabled = true;
+  document.getElementById('detailStartBtn').textContent = action === 'start' ? '▶ Starting...' : '■ Stopping...';
+
   const data = await apiCall(`/api/projects/${p.id}/${action}`, { method: 'POST' });
 
   if (data.success) {
@@ -1631,10 +1729,14 @@ async function toggleProject() {
     if (updated) {
       updateProjectDetailUI(updated);
       updateTerminalStatus(updated.status);
-      // Clear terminal on start
       if (action === 'start') {
-        document.getElementById('terminalBox').innerHTML = '';
+        // Clear logs
         document.getElementById('logBox').innerHTML = '';
+        // Init terminal
+        setTimeout(() => initTerminal(), 500);
+      }
+      if (action === 'stop') {
+        destroyTerminal();
       }
     }
     renderDashboard();
@@ -1643,13 +1745,17 @@ async function toggleProject() {
   } else {
     showToast(data.error || 'Action failed', 'error');
   }
+  document.getElementById('detailStartBtn').disabled = false;
 }
 
 async function restartProject() {
   const p = state.projects.find(x => x.id === state.currentProjectId);
   if (!p) return;
 
+  document.getElementById('detailStartBtn').disabled = true;
+  document.getElementById('detailStartBtn').textContent = '↻ Restarting...';
   showToast('🔄 Restarting project...', 'info');
+
   const data = await apiCall(`/api/projects/${p.id}/restart`, { method: 'POST' });
 
   if (data.success) {
@@ -1658,17 +1764,40 @@ async function restartProject() {
     if (updated) {
       updateProjectDetailUI(updated);
       updateTerminalStatus(updated.status);
-      document.getElementById('terminalBox').innerHTML = '';
       document.getElementById('logBox').innerHTML = '';
+      setTimeout(() => initTerminal(), 500);
     }
     showToast('✅ Project restarted', 'success');
   } else {
     showToast(data.error || 'Restart failed', 'error');
   }
+  document.getElementById('detailStartBtn').disabled = false;
 }
 
 // ============================================================
-// File Management
+// PROJECT STATUS
+// ============================================================
+async function renderProjectStatus() {
+  const id = state.currentProjectId;
+  if (!id) return;
+
+  const data = await apiCall(`/api/projects/${id}/status`);
+  if (data && data.id) {
+    document.getElementById('ps-status').textContent = (data.status || 'stopped').toUpperCase();
+    document.getElementById('ps-status').style.color =
+      data.status === 'running' ? 'var(--green)' :
+      data.status === 'error' ? 'var(--red)' :
+      data.status === 'restarting' ? 'var(--gold)' :
+      'var(--muted)';
+    document.getElementById('ps-uptime').textContent = data.uptime || '—';
+    document.getElementById('ps-restarts').textContent = data.restart_count || 0;
+    document.getElementById('ps-autorestart').textContent = data.auto_restart ? 'ON' : 'OFF';
+    document.getElementById('ps-autorestart').style.color = data.auto_restart ? 'var(--green)' : 'var(--red)';
+  }
+}
+
+// ============================================================
+// FILE MANAGEMENT
 // ============================================================
 async function fetchFiles(id) {
   const data = await apiCall(`/api/projects/${id}/files`);
@@ -1677,57 +1806,58 @@ async function fetchFiles(id) {
     c.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No files uploaded yet.</div>';
     return;
   }
-  c.innerHTML = data.map(f => `
-    <div class="file-item">
+  c.innerHTML = data.map(f => {
+    const isCritical = f.critical;
+    return `
+    <div class="file-item ${isCritical ? 'critical' : ''}">
       <div class="file-ext ${f.ext || 'file'}">.${f.ext || 'file'}</div>
       <div onclick="openFileEditor('${f.name}')" style="flex:1;cursor:pointer;">
-        <div class="file-name">${f.name}</div>
+        <div class="file-name">
+          ${f.name}
+          ${isCritical ? '<span class="critical-badge">🛡️ PROTECTED</span>' : ''}
+        </div>
         <div class="file-size">${(f.size/1024).toFixed(1)} KB · ${f.modified || ''}</div>
       </div>
       <div class="file-actions">
-        <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="openFileEditor('${f.name}')">✏️ Edit</button>
-        <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setMain('${f.name}')">Set Main</button>
-        <button class="btn btn-danger" style="font-size:10px;padding:4px 8px;" onclick="deleteFile('${f.name}')">🗑</button>
+        <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="event.stopPropagation();openFileEditor('${f.name}')">✏️ Edit</button>
+        <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="event.stopPropagation();setMain('${f.name}')">Set Main</button>
+        ${!isCritical ? `<button class="btn btn-danger" style="font-size:10px;padding:4px 8px;" onclick="event.stopPropagation();deleteFile('${f.name}')">🗑</button>` : ''}
       </div>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 function setMain(name) {
   document.getElementById('mainFile').value = name;
   const ext = name.split('.').pop().toLowerCase();
-  let cmd = '';
-  if (ext === 'py') cmd = 'python ' + name;
-  else if (ext === 'js') cmd = 'node ' + name;
-  else if (ext === 'ts') cmd = 'ts-node ' + name;
-  else if (ext === 'sh') cmd = 'bash ' + name;
-  else if (ext === 'php') cmd = 'php ' + name;
-  else cmd = 'python ' + name;
+  const cmdMap = { py: 'python ', js: 'node ', ts: 'ts-node ', sh: 'bash ', php: 'php ' };
+  const cmd = (cmdMap[ext] || 'python ') + name;
   document.getElementById('mainCmd').value = cmd;
   showToast(`📄 ${name} set as main file`, 'success');
 }
 
-async function deleteFile(name) {
-  const id = state.currentProjectId;
-  if (!id) return;
-
+function confirmDeleteFile(name) {
   document.getElementById('confirmTitle').textContent = 'Delete File?';
   document.getElementById('confirmBody').textContent = `Delete "${name}"? This cannot be undone.`;
   document.getElementById('confirmBtn').onclick = async () => {
     closeModal('confirmModal');
+    const id = state.currentProjectId;
+    if (!id) return;
     const data = await apiCall(`/api/projects/${id}/files/${encodeURIComponent(name)}`, { method: 'DELETE' });
     if (data.success) {
       showToast('File deleted', 'info');
       await fetchFiles(id);
     } else {
-      showToast('Failed to delete file', 'error');
+      showToast(data.error || 'Failed to delete file', 'error');
     }
   };
   openModal('confirmModal');
 }
 
+function deleteFile(name) { confirmDeleteFile(name); }
+
 // ============================================================
-// File Editor
+// FILE EDITOR
 // ============================================================
 async function openFileEditor(filename) {
   const id = state.currentProjectId;
@@ -1739,7 +1869,7 @@ async function openFileEditor(filename) {
     document.querySelectorAll('[id^="page-"]').forEach(el => el.style.display = 'none');
     document.getElementById('page-file-editor').style.display = 'block';
     document.getElementById('editorTitle').textContent = 'Editing: ' + filename;
-    document.getElementById('editorFilename').textContent = filename + ' · ' + state.projects.find(x => x.id === id)?.name || '';
+    document.getElementById('editorFilename').textContent = filename + ' · ' + (state.projects.find(x => x.id === id)?.name || '');
     document.getElementById('editorTextarea').value = data.content;
   } else {
     showToast('Failed to load file', 'error');
@@ -1757,14 +1887,12 @@ async function saveEditorFile() {
   const id = state.currentProjectId;
   const filename = state.editingFile;
   const content = document.getElementById('editorTextarea').value;
-
   if (!id || !filename) return;
 
   const data = await apiCall(`/api/projects/${id}/files/${encodeURIComponent(filename)}`, {
     method: 'PUT',
     body: JSON.stringify({ content })
   });
-
   if (data.success) {
     showToast('💾 File saved!', 'success');
   } else {
@@ -1773,7 +1901,7 @@ async function saveEditorFile() {
 }
 
 // ============================================================
-// File Upload & Drag & Drop
+// FILE UPLOAD
 // ============================================================
 function handleDragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('drag'); }
 function handleDragLeave() { document.getElementById('uploadZone').classList.remove('drag'); }
@@ -1786,20 +1914,12 @@ async function handleFiles(files) {
   for (const file of files) {
     const formData = new FormData();
     formData.append('file', file);
-
     try {
       const res = await fetch(`/api/projects/${id}/upload`, { method: 'POST', body: formData });
       const data = await res.json();
-
       if (data.success) {
-        showToast(`✅ ${file.name} uploaded!`, 'success');
+        showToast(`✅ ${file.name} uploaded! ${data.message || ''}`, 'success');
         await fetchFiles(id);
-      } else if (data.conflict) {
-        // Show conflict modal
-        const conflictList = document.getElementById('conflictFileList');
-        conflictList.innerHTML = data.conflicts.map(f => `<div>⚠️ ${f}</div>`).join('');
-        pendingZipFile = file;
-        openModal('conflictModal');
       } else {
         showToast(`❌ ${data.error || 'Upload failed'}`, 'error');
       }
@@ -1809,33 +1929,8 @@ async function handleFiles(files) {
   }
 }
 
-async function confirmZipOverwrite() {
-  closeModal('conflictModal');
-  const id = state.currentProjectId;
-  if (!id || !pendingZipFile) return;
-
-  // Re-upload with overwrite flag by re-fetching
-  const formData = new FormData();
-  formData.append('file', pendingZipFile);
-  formData.append('overwrite', 'true');
-
-  try {
-    const res = await fetch(`/api/projects/${id}/upload`, { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.success) {
-      showToast(`✅ ${pendingZipFile.name} extracted (overwritten)`, 'success');
-      await fetchFiles(id);
-    } else {
-      showToast(`❌ ${data.error || 'Upload failed'}`, 'error');
-    }
-  } catch (e) {
-    showToast('❌ Upload error', 'error');
-  }
-  pendingZipFile = null;
-}
-
 // ============================================================
-// Packages
+// PACKAGES
 // ============================================================
 async function installPackage() {
   const name = document.getElementById('pkgName').value.trim();
@@ -1848,7 +1943,6 @@ async function installPackage() {
     method: 'POST',
     body: JSON.stringify({ name })
   });
-
   if (data.success) {
     showToast(`✅ ${name} installed!`, 'success');
     document.getElementById('pkgName').value = '';
@@ -1859,10 +1953,7 @@ async function installPackage() {
   }
 }
 
-function quickPkg(name) {
-  document.getElementById('pkgName').value = name;
-  installPackage();
-}
+function quickPkg(name) { document.getElementById('pkgName').value = name; installPackage(); }
 
 async function renderInstalled() {
   const p = state.projects.find(x => x.id === state.currentProjectId);
@@ -1871,7 +1962,7 @@ async function renderInstalled() {
 
   const c = document.getElementById('installedList');
   if (!p || !p.packages || !p.packages.length) {
-    c.innerHTML = '<div style="color:var(--muted);font-size:12px;font-family:\'Share Tech Mono\',monospace;">No packages installed</div>';
+    c.innerHTML = '<div style="color:var(--muted);font-size:12px;font-family:monospace;">No packages installed</div>';
     return;
   }
   c.innerHTML = p.packages.map((pkg) => `
@@ -1902,7 +1993,7 @@ async function uninstallPkg(name) {
 }
 
 // ============================================================
-// Settings
+// SETTINGS
 // ============================================================
 async function saveSettings() {
   const id = state.currentProjectId;
@@ -1910,16 +2001,18 @@ async function saveSettings() {
   const command = document.getElementById('mainCmd').value;
   const port = document.getElementById('portField').value;
   const main_file = document.getElementById('mainFile').value;
+  const auto_restart = document.getElementById('autoResetToggle').classList.contains('on');
 
   const data = await apiCall(`/api/projects/${id}/settings`, {
     method: 'POST',
-    body: JSON.stringify({ command, port: parseInt(port), main_file })
+    body: JSON.stringify({ command, port: parseInt(port), main_file, auto_restart })
   });
 
   if (data.success) {
     document.getElementById('detailCmd').textContent = command;
     showToast('Settings saved', 'success');
     await fetchProjects();
+    renderProjectStatus();
   } else {
     showToast('Failed to save settings', 'error');
   }
@@ -1935,9 +2028,7 @@ async function saveSiteName() {
   if (data.success) {
     state.siteName = name;
     const logoEl = document.querySelector('.logo');
-    if (logoEl) {
-      logoEl.innerHTML = '<div class="logo-icon">👑</div> ' + name;
-    }
+    if (logoEl) logoEl.innerHTML = '<div class="logo-icon">👑</div> ' + name;
     showToast('Site name updated', 'success');
   }
 }
@@ -1961,13 +2052,12 @@ async function changeMyPassword() {
 }
 
 // ============================================================
-// Live Logs
+// LOGS
 // ============================================================
 function appendToLogBox(data) {
   const box = document.getElementById('logBox');
   if (!box) return;
 
-  // Remove the "No logs" placeholder if present
   const firstChild = box.firstChild;
   if (firstChild && firstChild.textContent.includes('No logs yet')) {
     box.innerHTML = '';
@@ -1978,15 +2068,13 @@ function appendToLogBox(data) {
     if (!line.trim()) continue;
     const div = document.createElement('div');
     div.className = 'log-line info';
-    div.textContent = `[${new Date().toLocaleTimeString()}] ${line}`;
+    const ts = new Date().toLocaleTimeString();
+    div.textContent = `[${ts}] ${line}`;
     box.appendChild(div);
   }
 
-  // Auto-scroll to bottom
   box.scrollTop = box.scrollHeight;
-
-  // Trim to last 200 lines
-  while (box.children.length > 200) {
+  while (box.children.length > 300) {
     box.removeChild(box.firstChild);
   }
 }
@@ -2003,7 +2091,7 @@ async function refreshLogs() {
   const box = document.getElementById('logBox');
   box.innerHTML = '';
   if (data && data.length) {
-    data.forEach(log => {
+    data.slice(-200).forEach(log => {
       const div = document.createElement('div');
       div.className = 'log-line ' + (log.type || 'info');
       div.textContent = log.message || '';
@@ -2017,65 +2105,28 @@ async function refreshLogs() {
 }
 
 // ============================================================
-// Live Terminal (with keyboard input)
+// USERS
 // ============================================================
-function appendToTerminal(data) {
-  const box = document.getElementById('terminalBox');
-  if (!box) return;
-
-  const lines = data.split('\n');
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    const div = document.createElement('div');
-    div.className = 'terminal-line stdout';
-    div.textContent = line;
-    box.appendChild(div);
+function renderUsers() {
+  const c = document.getElementById('usersList');
+  if (!state.users.length) {
+    c.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No users registered.</div>';
+    return;
   }
-
-  box.scrollTop = box.scrollHeight;
-
-  // Trim to last 500 lines
-  while (box.children.length > 500) {
-    box.removeChild(box.firstChild);
-  }
+  c.innerHTML = state.users.map(u => `
+    <div class="user-row">
+      <div class="user-row-avatar">${(u.username || '?').charAt(0).toUpperCase()}</div>
+      <div>
+        <div class="user-info-name">${u.username}</div>
+        <div class="user-info-stats">${u.email || ''} · ${u.role || 'user'} · joined ${(u.created || '').slice(0,10)}</div>
+      </div>
+      <div class="user-row-actions">
+        ${u.username !== 'xNIROB' ? `<button class="btn btn-danger" style="font-size:10px;padding:5px 10px;" onclick="confirmDeleteUser('${u.username}')">Delete</button>` : '<span style="font-size:10px;color:var(--gold);font-family:monospace;">OWNER</span>'}
+      </div>
+    </div>
+  `).join('');
 }
 
-function sendTerminalCommand() {
-  const input = document.getElementById('terminalInput');
-  const command = input.value;
-  if (!command.trim()) return;
-
-  const id = state.currentProjectId;
-  if (!id) return;
-
-  // Display the command locally
-  const box = document.getElementById('terminalBox');
-  if (box) {
-    const div = document.createElement('div');
-    div.className = 'terminal-line' + (command.startsWith('#') ? ' muted' : '');
-    div.textContent = '$ ' + command;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-  }
-
-  // Send via WebSocket
-  socket.emit('terminal_input', {
-    project_id: id,
-    data: command + '\n'
-  });
-
-  input.value = '';
-  input.focus();
-}
-
-function clearTerminal() {
-  document.getElementById('terminalBox').innerHTML = '<div class="terminal-line muted">Terminal cleared.</div>';
-  showToast('Terminal cleared', 'info');
-}
-
-// ============================================================
-// User Management
-// ============================================================
 function openAddUser() { openModal('addUserModal'); }
 
 async function addUser() {
@@ -2089,7 +2140,6 @@ async function addUser() {
     method: 'POST',
     body: JSON.stringify({ username, email, password })
   });
-
   if (data.success) {
     closeModal('addUserModal');
     document.getElementById('newUsername').value = '';
@@ -2106,7 +2156,7 @@ async function addUser() {
 
 function confirmDeleteUser(username) {
   document.getElementById('confirmTitle').textContent = 'Delete User?';
-  document.getElementById('confirmBody').textContent = `Delete user "${username}"? They will lose access to the panel.`;
+  document.getElementById('confirmBody').textContent = `Delete user "${username}"? They will lose access.`;
   document.getElementById('confirmBtn').onclick = async () => {
     closeModal('confirmModal');
     const data = await apiCall(`/api/users/${username}`, { method: 'DELETE' });
@@ -2123,43 +2173,52 @@ function confirmDeleteUser(username) {
 }
 
 // ============================================================
-// Bulk Package Installer
+// THEME
 // ============================================================
-async function installAllPackages() {
-  const pkgs = ['flask', 'django', 'discord.py', 'fastapi', 'requests', 'aiohttp',
-                'python-telegram-bot', 'tweepy', 'pandas', 'numpy', 'openai', 'langchain'];
+function renderTheme() {
+  const g = document.getElementById('colorSwatches');
+  g.innerHTML = presets.map(p => `
+    <div class="color-swatch ${state.accentColor === p.color ? 'active' : ''}"
+         style="background:${p.color};box-shadow:0 0 10px ${p.color}40"
+         onclick="applyColor('${p.color}', this)" title="${p.name}"></div>
+  `).join('');
+  document.getElementById('currentColorDot').style.background = state.accentColor;
+  document.getElementById('currentColorDot').style.boxShadow = '0 0 15px ' + state.accentColor + '40';
+  document.getElementById('currentColorHex').textContent = state.accentColor;
+  document.getElementById('colorHexInput').value = state.accentColor;
+  document.getElementById('colorPicker').value = state.accentColor;
+}
 
-  const id = state.currentProjectId;
-  if (!id) { showToast('Open a project first', 'error'); return; }
+function applyColor(hex, el) {
+  state.accentColor = hex;
+  document.documentElement.style.setProperty('--accent', hex);
+  document.documentElement.style.setProperty('--glow', hex + '40');
+  document.getElementById('currentColorDot').style.background = hex;
+  document.getElementById('currentColorDot').style.boxShadow = '0 0 15px ' + hex;
+  document.getElementById('currentColorHex').textContent = hex;
+  document.getElementById('colorHexInput').value = hex;
+  document.getElementById('colorPicker').value = hex;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  if (el) el.classList.add('active');
+  showToast('Theme color updated', 'success');
+}
 
-  showToast(`📦 Installing ${pkgs.length} packages...`, 'info');
-
-  for (const pkg of pkgs) {
-    const data = await apiCall(`/api/projects/${id}/packages`, {
-      method: 'POST',
-      body: JSON.stringify({ name: pkg })
-    });
-    if (data.success) {
-      showToast(`✅ ${pkg} installed`, 'success');
-    } else {
-      showToast(`⚠️ ${pkg}: ${data.error || 'skipped'}`, 'warn');
-    }
-  }
-
-  await fetchProjects();
-  renderInstalled();
-  showToast('🎉 Package installation complete!', 'success');
+function applyCustomColor() {
+  const hex = document.getElementById('colorHexInput').value.trim();
+  if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) { showToast('Invalid hex color', 'error'); return; }
+  applyColor(hex, null);
+  renderTheme();
 }
 
 // ============================================================
-// Reset All Data (Danger Zone)
+// RESET ALL DATA
 // ============================================================
 function resetAllData() {
   document.getElementById('confirmTitle').textContent = '⚠️ DANGER: Reset All Data';
   document.getElementById('confirmBody').innerHTML = `
-    <div style="color:var(--red);font-weight:600;margin-bottom:10px;">This will permanently delete ALL projects, files, and user data except the admin account.</div>
-    <div style="font-size:12px;color:var(--muted);">Type <strong style="color:var(--accent);">RESET</strong> in the box below to confirm:</div>
-    <input class="input-field" id="resetConfirmInput" placeholder="Type RESET here" style="width:100%;margin-top:8px;">
+    <div style="color:var(--red);font-weight:600;margin-bottom:10px;">This will permanently delete ALL projects and files.</div>
+    <div style="font-size:12px;color:var(--muted);">Type <strong>RESET</strong> to confirm:</div>
+    <input class="input-field" id="resetConfirmInput" placeholder="Type RESET" style="width:100%;margin-top:8px;">
   `;
   document.getElementById('confirmBtn').className = 'btn btn-danger';
   document.getElementById('confirmBtn').textContent = 'Reset Everything';
@@ -2176,23 +2235,11 @@ function resetAllData() {
 }
 
 async function performReset() {
-  // Delete all projects
   for (const p of state.projects) {
     await apiCall(`/api/projects/${p.id}`, { method: 'DELETE' });
   }
-  showToast('All projects deleted', 'info');
-
-  // Reset site name
-  await apiCall('/api/site_name', {
-    method: 'POST',
-    body: JSON.stringify({ name: 'NIROB PANEL' })
-  });
-
-  // Turn off maintenance
-  if (state.maintenance) {
-    await apiCall('/api/maintenance', { method: 'POST' });
-  }
-
+  await apiCall('/api/site_name', { method: 'POST', body: JSON.stringify({ name: 'NIROB PANEL' }) });
+  if (state.maintenance) await apiCall('/api/maintenance', { method: 'POST' });
   await fetchProjects();
   await fetchUsers();
   await fetchSiteName();
@@ -2200,45 +2247,29 @@ async function performReset() {
   renderDashboard();
   renderProjects();
   showToast('✅ Panel has been reset!', 'success');
-  document.getElementById('confirmBtn').className = 'btn btn-danger';
-  document.getElementById('confirmBtn').textContent = 'Confirm';
 }
 
 // ============================================================
-// System Stats Polling
+// POLLING & KEYBOARD SHORTCUTS
 // ============================================================
 setInterval(fetchSystemStats, 5000);
 
-// ============================================================
-// Keyboard Shortcuts
-// ============================================================
 document.addEventListener('keydown', (e) => {
-  // Ctrl+Enter to send terminal command
-  if (e.key === 'Enter' && e.ctrlKey && state.currentTab === 'terminal') {
-    sendTerminalCommand();
-  }
-  // Escape to close modals
   if (e.key === 'Escape') {
     document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
   }
-  // Ctrl+S to save file editor
-  if (e.key === 's' && (e.ctrlKey || e.metaKey) && state.editingFile) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's' && state.editingFile) {
     e.preventDefault();
     saveEditorFile();
   }
 });
 
-// ============================================================
-// Modal close on backdrop click
-// ============================================================
 document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => {
-    if (e.target === o) o.classList.remove('show');
-  });
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); });
 });
 
 // ============================================================
-// Init
+// START
 // ============================================================
 init();
 </script>
