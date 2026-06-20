@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIROB PANEL — Admin</title>
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --accent: #ff6b9d;
+    --accent2: #c084fc;
+    --gold: #fcd34d;
+    --red: #f87171;
+    --green: #34d399;
+    --bg: #0a0a0f;
+    --bg2: #14141f;
+    --bg3: #1a1a2e;
+    --border: rgba(255,107,157,0.15);
+    --text: #e8e8f0;
+    --muted: #8888aa;
+    --card: rgba(20,20,31,0.95);
+    --glow: rgba(255,107,157,0.25);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  .bg-animation {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: 
+      radial-gradient(ellipse at 20% 50%, rgba(255,107,157,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 50%, rgba(192,132,252,0.05) 0%, transparent 60%);
+  }
+  
+  .bg-animation::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(255,107,157,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,107,157,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridMove 20s linear infinite;
+  }
+
+  @keyframes gridMove {
+    from { transform: translateY(0); }
+    to { transform: translateY(40px); }
+  }
+
+  .app { position: relative; z-index: 1; }
+
+  .header {
+    background: rgba(10,10,15,0.97);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    padding: 0 24px;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top:0; z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px; font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex; align-items: center; gap: 10px;
+    animation: logoGlow 3s ease-in-out infinite;
+  }
+  
+  @keyframes logoGlow {
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(255,107,157,0.2)); }
+    50% { filter: drop-shadow(0 0 30px rgba(255,107,157,0.4)); }
+  }
+
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    -webkit-text-fill-color: white;
+    box-shadow: 0 0 20px var(--glow);
+    animation: iconFloat 4s ease-in-out infinite;
+  }
+  
+  @keyframes iconFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+
+  .header-stats {
+    display: flex; gap: 20px; align-items: center;
+  }
+  .hstat {
+    font-size: 11px; color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .hstat span { color: var(--accent); font-weight: bold; }
+
+  .status-live {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    padding: 4px 14px;
+    border-radius: 20px;
+    background: rgba(52,211,153,0.08);
+    border: 1px solid rgba(52,211,153,0.15);
+  }
+  
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 15px var(--green);
+    animation: livePulse 1.5s ease-in-out infinite;
+  }
+  
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.3); }
+  }
+
+  .main { display: flex; height: calc(100vh - 64px); }
+
+  .sidebar {
+    width: 220px; min-width: 220px;
+    background: rgba(20,20,31,0.92);
+    border-right: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    display: flex; flex-direction: column;
+    padding: 20px 0;
+    overflow-y: auto;
+  }
+
+  .nav-section { margin-bottom: 24px; }
+  .nav-label {
+    font-size: 9px; letter-spacing: 2px; color: var(--muted);
+    padding: 0 16px 8px;
+    font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 13px; font-weight: 500;
+    color: var(--muted);
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+    position: relative;
+  }
+  .nav-item:hover { color: var(--text); background: rgba(255,107,157,0.05); }
+  .nav-item.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(255,107,157,0.08);
+  }
+  .nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--accent2);
+    color: white; font-size: 10px;
+    padding: 2px 6px; border-radius: 20px;
+  }
+  .nav-badge.green { background: var(--green); }
+
+  .sidebar-footer {
+    margin-top: auto; padding: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .user-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px; border-radius: 10px;
+    background: rgba(255,107,157,0.05);
+    border: 1px solid var(--border);
+  }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: white;
+  }
+  .user-name { font-size: 12px; font-weight: 600; color: var(--accent); }
+  .user-role { font-size: 10px; color: var(--gold); }
+
+  .content {
+    flex: 1; overflow-y: auto; padding: 28px;
+    background: transparent;
+  }
+
+  .page-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 24px; font-weight: 700;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .page-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px; margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    position: relative; overflow: hidden;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .stat-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 40px var(--glow);
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute; top:0; left:0; right:0; height:2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .stat-val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 28px; font-weight: 900;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-val.blue { color: var(--accent); text-shadow: 0 0 20px var(--glow); }
+  .stat-val.purple { color: var(--accent2); }
+  .stat-val.green { color: var(--green); }
+  .stat-val.gold { color: var(--gold); }
+  .stat-label { font-size: 10px; letter-spacing: 1.5px; color: var(--muted); }
+  .stat-icon { position: absolute; right: 16px; top: 16px; font-size: 22px; opacity: 0.4; }
+
+  .section-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .section-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .section-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px; letter-spacing: 2px;
+    color: var(--accent);
+  }
+  .section-body { padding: 20px; }
+
+  .project-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .project-item:hover {
+    border-color: var(--accent);
+    background: rgba(255,107,157,0.05);
+  }
+  .proj-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent2), #7c3aed);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .proj-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; color: var(--accent); }
+  .proj-cmd { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--muted); }
+  .proj-actions { margin-left: auto; display: flex; gap: 8px; }
+  
+  .status-badge {
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .status-badge.running {
+    background: rgba(52,211,153,0.15);
+    color: var(--green);
+    border: 1px solid rgba(52,211,153,0.3);
+    animation: runPulse 2s ease-in-out infinite;
+  }
+  @keyframes runPulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+  .status-badge.stopped {
+    background: rgba(248,113,113,0.15);
+    color: var(--red);
+    border: 1px solid rgba(248,113,113,0.3);
+  }
+
+  .btn {
+    padding: 8px 18px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+    cursor: pointer; border: none;
+    transition: all 0.2s; font-family: 'Share Tech Mono', monospace;
+    text-transform: uppercase;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #0a0a0f;
+    box-shadow: 0 0 30px var(--glow);
+  }
+  .btn-primary:hover { box-shadow: 0 0 50px var(--glow); transform: translateY(-2px); }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger {
+    background: rgba(248,113,113,0.15);
+    border: 1px solid rgba(248,113,113,0.3);
+    color: var(--red);
+  }
+  .btn-danger:hover { background: rgba(248,113,113,0.25); }
+
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 48px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: rgba(255,107,157,0.02);
+    position: relative; overflow: hidden;
+  }
+  .upload-zone:hover, .upload-zone.drag {
+    border-color: var(--accent);
+    background: rgba(255,107,157,0.06);
+    transform: scale(1.01);
+  }
+  .upload-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+  .upload-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--accent); }
+  .upload-sub { font-size: 12px; color: var(--muted); }
+  .upload-zone input { position: absolute; inset:0; opacity:0; cursor:pointer; }
+
+  .file-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+  .file-ext {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .file-ext.py { background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+  .file-ext.js { background: rgba(245,158,11,0.2); color: var(--gold); border: 1px solid rgba(245,158,11,0.3); }
+  .file-ext.zip { background: rgba(124,58,237,0.2); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+  .file-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .file-size { font-size: 11px; color: var(--muted); }
+  .file-actions { margin-left: auto; display: flex; gap: 6px; }
+
+  .log-box, .terminal-container {
+    background: #020409;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    min-height: 200px; max-height: 400px;
+    overflow-y: auto;
+    line-height: 1.8;
+  }
+  .log-line, .terminal-line { margin-bottom: 2px; }
+  .log-line.success, .terminal-line.success { color: var(--green); }
+  .log-line.error, .terminal-line.error { color: var(--red); }
+  .log-line.info, .terminal-line.info { color: var(--accent); }
+  .log-line.muted, .terminal-line.muted { color: var(--muted); }
+
+  .pkg-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .pkg-tag {
+    padding: 5px 14px; border-radius: 20px;
+    font-size: 11px; font-family: 'Share Tech Mono', monospace;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    cursor: pointer; transition: all 0.2s; color: var(--muted);
+  }
+  .pkg-tag:hover { border-color: var(--accent); color: var(--accent); background: rgba(255,107,157,0.05); }
+
+  .pkg-input-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .input-field {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text); font-size: 13px;
+    font-family: 'Share Tech Mono', monospace;
+    outline: none; transition: all 0.2s;
+  }
+  .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
+
+  .progress-bar {
+    width: 100%; height: 6px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px; overflow: hidden;
+    margin-top: 6px;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.5s ease;
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  .resource-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+  .resource-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px;
+  }
+  .res-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); margin-bottom: 8px; }
+  .res-val {
+    font-family: 'Orbitron', sans-serif; font-size: 24px; font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .modal-overlay {
+    position: fixed; inset:0; z-index: 200;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    width: 90%; max-width: 500px;
+    transform: scale(0.9); transition: transform 0.3s;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+  }
+  .modal-overlay.show .modal { transform: scale(1); }
+  .modal-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px; font-weight: 700; margin-bottom: 20px;
+    color: var(--accent);
+  }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  .toast-container { position: fixed; top: 80px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 10px; }
+  .toast {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    animation: toastIn 0.3s ease;
+    max-width: 350px;
+  }
+  @keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+  .toast.success { border-color: rgba(52,211,153,0.4); }
+  .toast.error { border-color: rgba(248,113,113,0.4); }
+  .toast.info { border-color: rgba(255,107,157,0.4); }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab {
+    padding: 8px 18px; border-radius: 8px;
+    font-size: 12px; font-family: 'Share Tech Mono', monospace;
+    cursor: pointer; transition: all 0.2s;
+    color: var(--muted); letter-spacing: 1px;
+    border: 1px solid transparent;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-color: var(--border); background: rgba(255,107,157,0.08); }
+
+  .setting-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .setting-label { font-size: 13px; font-weight: 500; }
+  .setting-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .toggle {
+    width: 44px; height: 24px; border-radius: 12px;
+    background: rgba(255,255,255,0.1);
+    cursor: pointer; position: relative; transition: all 0.3s;
+    border: 1px solid var(--border);
+  }
+  .toggle.on { background: var(--accent); border-color: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: white; transition: all 0.3s;
+  }
+  .toggle.on::after { left: 23px; }
+
+  .maintenance-banner {
+    padding: 12px 20px;
+    background: rgba(252,211,77,0.1);
+    border: 1px solid rgba(252,211,77,0.3);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: none;
+    font-size: 13px; color: var(--gold);
+    align-items: center; gap: 10px;
+  }
+  .maintenance-banner.show { display: flex; }
+
+  .user-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px; border-radius: 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    margin-bottom: 8px; transition: all 0.2s;
+  }
+  .user-row:hover { border-color: var(--accent); }
+  .user-row-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent2), #7c3aed);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .user-info-name { font-size: 13px; font-weight: 600; color: var(--accent); }
+  .user-info-stats { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .user-row-actions { margin-left: auto; display: flex; gap: 8px; }
+
+  .color-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .color-swatch {
+    width: 40px; height: 40px; border-radius: 10px;
+    cursor: pointer; transition: all 0.2s;
+    border: 2px solid transparent;
+  }
+  .color-swatch:hover, .color-swatch.active { border-color: white; transform: scale(1.1); }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  @media(max-width: 768px) {
+    .sidebar { display: none; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .resource-row { grid-template-columns: 1fr; }
+    .header-stats { display: none; }
+    .content { padding: 16px; }
+  }
+
+  .new-proj-form { display: flex; flex-direction: column; gap: 12px; }
+  .form-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; letter-spacing: 1px; font-family: 'Share Tech Mono', monospace; }
+
+  .run-counter {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--muted);
+    margin-top: 4px;
+  }
+  .run-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+  .status-indicator {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 14px; border-radius: 20px;
+    font-size: 11px; font-family: 'Share Tech Mono', monospace;
+  }
+  .status-indicator.online {
+    background: rgba(52,211,153,0.12);
+    color: var(--green);
+    border: 1px solid rgba(52,211,153,0.2);
+  }
+  .status-indicator.offline {
+    background: rgba(248,113,113,0.12);
+    color: var(--red);
+    border: 1px solid rgba(248,113,113,0.2);
+  }
+  .status-indicator .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    animation: livePulse 1.5s ease-in-out infinite;
+  }
+  .status-indicator.online .dot { background: var(--green); }
+  .status-indicator.offline .dot { background: var(--red); animation: none; }
+</style>
+</head>
+<body>
+
+<div class="bg-animation"></div>
+
+<div class="app" id="app">
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">👑</div>
+    NIROB PANEL
+  </div>
+  <div class="header-stats">
+    <div class="hstat">CPU: <span id="hCpu">11.4%</span></div>
+    <div class="hstat">RAM: <span id="hRam">42.9%</span></div>
+    <div class="hstat">DISK: <span id="hDisk">83.7%</span></div>
+    <div class="hstat" id="loggedUserHeader">@xNIROB</div>
+  </div>
+  <div class="status-live">
+    <div class="live-dot"></div>
+    LIVE 24/7
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">Navigation</div>
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+        <span class="nav-icon">⚡</span> Dashboard
+        <span class="nav-badge green" id="runningBadge">0</span>
+      </div>
+      <div class="nav-item" onclick="showPage('projects')" id="nav-projects">
+        <span class="nav-icon">📁</span> Projects
+        <span class="nav-badge" id="projBadge">0</span>
+      </div>
+      <div class="nav-item" onclick="showPage('users')" id="nav-users">
+        <span class="nav-icon">👥</span> Users
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item" onclick="showPage('maintenance')" id="nav-maintenance">
+        <span class="nav-icon">🔧</span> Maintenance
+      </div>
+      <div class="nav-item" onclick="showPage('theme')" id="nav-theme">
+        <span class="nav-icon">🎨</span> Theme
+      </div>
+      <div class="nav-item" onclick="showPage('settings')" id="nav-settings">
+        <span class="nav-icon">⚙️</span> Settings
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebarAvatar">N</div>
+        <div>
+          <div class="user-name" id="sidebarName">@xNIROB</div>
+          <div class="user-role" id="sidebarRole">ADMIN</div>
+        </div>
+        <button onclick="handleLogout()" style="margin-left:auto;background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;" title="Logout">⏻</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content" id="contentArea">
+
+    <div id="page-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Welcome back! Your server is running 24/7.</div>
+
+      <div id="maintenanceBanner" class="maintenance-banner">
+        🔧 MAINTENANCE MODE IS ACTIVE
+        <button onclick="toggleMaintenance()" class="btn btn-ghost" style="margin-left:auto;font-size:10px;padding:4px 12px;">Turn Off</button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon">👥</div>
+          <div class="stat-val blue" id="statUsers">0</div>
+          <div class="stat-label">USERS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📁</div>
+          <div class="stat-val purple" id="statProjects">0</div>
+          <div class="stat-label">PROJECTS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">▶️</div>
+          <div class="stat-val green" id="statRunning">0</div>
+          <div class="stat-label">RUNNING</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📄</div>
+          <div class="stat-val gold" id="statFiles">0</div>
+          <div class="stat-label">FILES</div>
+        </div>
+      </div>
+
+      <div class="resource-row">
+        <div class="resource-card">
+          <div class="res-label">CPU USAGE</div>
+          <div class="res-val" id="cpuVal" style="color:var(--accent);">11.4%</div>
+          <div class="progress-bar"><div class="progress-fill" id="cpuBar" style="width:11.4%"></div></div>
+        </div>
+        <div class="resource-card">
+          <div class="res-label">RAM USAGE</div>
+          <div class="res-val" id="ramVal" style="color:#a78bfa;">42.9%</div>
+          <div class="progress-bar"><div class="progress-fill" id="ramBar" style="width:42.9%;background:linear-gradient(90deg,#a78bfa,#7c3aed)"></div></div>
+        </div>
+        <div class="resource-card">
+          <div class="res-label">DISK USAGE</div>
+          <div class="res-val" id="diskVal" style="color:var(--gold);">83.7%</div>
+          <div class="progress-bar"><div class="progress-fill" id="diskBar" style="width:83.7%;background:linear-gradient(90deg,var(--gold),#d97706)"></div></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">Running Projects</div>
+          <button class="btn btn-primary" onclick="showPage('projects')" style="font-size:11px;padding:6px 14px;">+ New Project</button>
+        </div>
+        <div class="section-body" id="dashProjects"></div>
+      </div>
+    </div>
+
+    <div id="page-projects" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div class="page-title">Projects</div>
+          <div class="page-sub">Manage and run your code projects</div>
+        </div>
+        <button class="btn btn-primary" onclick="openNewProject()">+ New Project</button>
+      </div>
+      <div id="projectsList"></div>
+    </div>
+
+    <div id="page-project-detail" style="display:none;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap;">
+        <button onclick="showPage('projects')" class="btn btn-ghost" style="padding:8px 12px;">← Back</button>
+        <div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:var(--accent);" id="detailName">PROJECT</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);" id="detailCmd">python main.py</div>
+        </div>
+        <div id="detailStatus"></div>
+        <button id="detailStartBtn" class="btn btn-primary" style="margin-left:auto;" onclick="toggleProject()">▶ Start</button>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('files')" id="tab-files">📄 Files</div>
+        <div class="tab" onclick="switchTab('packages')" id="tab-packages">📦 Packages</div>
+        <div class="tab" onclick="switchTab('settings-proj')" id="tab-settings-proj">⚙️ Settings</div>
+        <div class="tab" onclick="switchTab('logs-proj')" id="tab-logs-proj">📋 Logs</div>
+        <div class="tab" onclick="switchTab('terminal')" id="tab-terminal">🖥️ Terminal</div>
+      </div>
+
+      <div id="proj-tab-files">
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
+             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          <input type="file" id="fileInput" multiple accept=".py,.js,.ts,.zip,.txt,.html,.json,.yml,.yaml,.md" onchange="handleFiles(this.files)" style="display:none;">
+          <span class="upload-icon">📂</span>
+          <div class="upload-title">Click or drag to upload</div>
+          <div class="upload-sub">Supports: .py, .js, .ts, .zip, .txt, .html, .json, .yml, .md</div>
+        </div>
+        <div id="fileList" style="margin-top:16px;"></div>
+      </div>
+
+      <div id="proj-tab-packages" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><div class="section-title">Install Package</div></div>
+          <div class="section-body">
+            <div class="pkg-input-row" style="margin-bottom:14px;">
+              <input class="input-field" id="pkgName" placeholder="Package name (e.g. flask)" style="min-width:180px;">
+              <input class="input-field" id="pkgVer" placeholder="Version (opt.)" style="max-width:140px;">
+              <button class="btn btn-primary" onclick="installPackage()">+ Install</button>
+            </div>
+            <div class="pkg-tags" id="popularPkgs">
+              <div class="pkg-tag" onclick="quickPkg('flask')">flask</div>
+              <div class="pkg-tag" onclick="quickPkg('fastapi')">fastapi</div>
+              <div class="pkg-tag" onclick="quickPkg('django')">django</div>
+              <div class="pkg-tag" onclick="quickPkg('requests')">requests</div>
+              <div class="pkg-tag" onclick="quickPkg('aiohttp')">aiohttp</div>
+              <div class="pkg-tag" onclick="quickPkg('discord.py')">discord.py</div>
+              <div class="pkg-tag" onclick="quickPkg('python-telegram-bot')">python-telegram-bot</div>
+              <div class="pkg-tag" onclick="quickPkg('tweepy')">tweepy</div>
+              <div class="pkg-tag" onclick="quickPkg('pandas')">pandas</div>
+              <div class="pkg-tag" onclick="quickPkg('numpy')">numpy</div>
+              <div class="pkg-tag" onclick="quickPkg('openai')">openai</div>
+              <div class="pkg-tag" onclick="quickPkg('langchain')">langchain</div>
+            </div>
+            <div style="margin-top:16px;">
+              <div style="font-size:11px;letter-spacing:1px;color:var(--muted);margin-bottom:10px;font-family:'Share Tech Mono',monospace;" id="installedCount">0 INSTALLED</div>
+              <div id="installedList"><div style="color:var(--muted);font-size:12px;font-family:'Share Tech Mono',monospace;">No packages installed</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="proj-tab-settings-proj" style="display:none;">
+        <div class="section-card">
+          <div class="section-header"><div class="section-title">Project Settings</div></div>
+          <div class="section-body">
+            <div style="margin-bottom:16px;">
+              <div class="form-label">Main File</div>
+              <input class="input-field" id="mainFile" value="main.py" style="width:100%;">
+            </div>
+            <div style="margin-bottom:16px;">
+              <div class="form-label">Main Command</div>
+              <input class="input-field" id="mainCmd" value="python main.py" style="width:100%;">
+            </div>
+            <div style="margin-bottom:20px;">
+              <div class="form-label">Port</div>
+              <input class="input-field" id="portField" value="8080" style="max-width:140px;">
+            </div>
+            <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:var(--accent);">Auto Reset</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:2px;">Auto restart on crash or error</div>
+                </div>
+                <div class="toggle on" id="autoResetToggle" onclick="this.classList.toggle('on')"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="proj-tab-logs-proj" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">Output Logs · Live</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-danger" style="font-size:10px;padding:5px 12px;" onclick="clearLogs()">🗑 Clear</button>
+              <button class="btn btn-primary" style="font-size:10px;padding:5px 12px;" onclick="refreshLogs()">↻ Refresh</button>
+            </div>
+          </div>
+          <div class="section-body">
+            <div class="log-box" id="logBox">
+              <div class="log-line muted">No logs yet. Start the server to see output.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="proj-tab-terminal" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title">Live Terminal</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="status-indicator offline" id="terminalStatus">
+                <span class="dot"></span> OFFLINE
+              </span>
+              <button class="btn btn-danger" style="font-size:10px;padding:5px 12px;" onclick="clearTerminal()">🗑 Clear</button>
+            </div>
+          </div>
+          <div class="section-body">
+            <div class="terminal-container" id="terminalBox">
+              <div class="terminal-line muted">Terminal ready. Start the project to see output.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-users" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div class="page-title">Users</div>
+          <div class="page-sub" id="userCountSub">0 registered users</div>
+        </div>
+        <button class="btn btn-primary" onclick="openAddUser()">+ Add User</button>
+      </div>
+      <div id="usersList"></div>
+    </div>
+
+    <div id="page-maintenance" style="display:none;">
+      <div class="page-title">Maintenance</div>
+      <div class="page-sub">Control server maintenance mode</div>
+      <div class="section-card">
+        <div class="section-header"><div class="section-title">Maintenance Mode</div></div>
+        <div class="section-body">
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Enable Maintenance Mode</div>
+              <div class="setting-sub">Users will see a maintenance page while enabled</div>
+            </div>
+            <div class="toggle" id="maintToggle" onclick="toggleMaintenance()"></div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Auto Recovery</div>
+              <div class="setting-sub">Automatically restart failed services</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-theme" style="display:none;">
+      <div class="page-title">Theme</div>
+      <div class="page-sub">Customize the UI accent color</div>
+      <div class="section-card">
+        <div class="section-header"><div class="section-title">UI Theme Color</div></div>
+        <div class="section-body">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,107,157,0.05);border:1px solid var(--border);border-radius:10px;margin-bottom:20px;">
+            <div id="currentColorDot" style="width:24px;height:24px;border-radius:50%;background:var(--accent);box-shadow:0 0 15px var(--glow);"></div>
+            <div>
+              <div style="font-size:12px;font-weight:600;" id="currentColorHex">#ff6b9d</div>
+              <div style="font-size:10px;color:var(--muted);">Changes apply site-wide immediately</div>
+            </div>
+          </div>
+          <div class="color-grid" id="colorSwatches"></div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <input type="color" id="colorPicker" value="#ff6b9d" style="width:44px;height:44px;border:none;background:none;cursor:pointer;border-radius:8px;">
+            <input class="input-field" id="colorHexInput" value="#ff6b9d" style="max-width:140px;" placeholder="#hex">
+            <button class="btn btn-primary" onclick="applyCustomColor()">Apply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page-settings" style="display:none;">
+      <div class="page-title">Settings</div>
+      <div class="page-sub">System configuration</div>
+      <div class="section-card">
+        <div class="section-header"><div class="section-title">System Settings</div></div>
+        <div class="section-body">
+          <div style="margin-bottom:20px;">
+            <div class="form-label">Change Site Name</div>
+            <input class="input-field" id="siteNameInput" placeholder="Site Name" style="width:100%;max-width:300px;margin-bottom:10px;">
+            <button class="btn btn-primary" onclick="saveSiteName()">Save Site Name</button>
+          </div>
+          <div style="margin-bottom:20px;padding-top:20px;border-top:1px solid var(--border);">
+            <div class="form-label">Change Admin Password</div>
+            <input class="input-field" id="newAdminPass" type="password" placeholder="New Admin Password" style="width:100%;max-width:300px;margin-bottom:10px;">
+            <button class="btn btn-primary" onclick="changeAdminPass()">Change Admin Password</button>
+          </div>
+          <div style="margin-bottom:20px;padding-top:20px;border-top:1px solid var(--border);">
+            <div class="form-label">Change Your Password</div>
+            <input class="input-field" id="currentPass" type="password" placeholder="Current Password" style="width:100%;max-width:300px;margin-bottom:6px;">
+            <input class="input-field" id="newUserPass" type="password" placeholder="New Password" style="width:100%;max-width:300px;margin-bottom:10px;">
+            <button class="btn btn-primary" onclick="changeMyPassword()">Change Password</button>
+          </div>
+          <div style="padding-top:20px;border-top:1px solid var(--border);">
+            <div class="form-label">Install All Packages</div>
+            <button class="btn btn-success" style="padding:12px 24px;font-size:12px;border-radius:10px;" onclick="installAllPackages()">
+              📦 Install All Packages
+            </button>
+            <div style="font-size:11px;color:var(--muted);margin-top:8px;">This will install all common Python packages (flask, django, discord.py, etc.)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div>
+
+<div class="modal-overlay" id="newProjectModal">
+  <div class="modal">
+    <div class="modal-title">+ New Project</div>
+    <div class="new-proj-form">
+      <div>
+        <div class="form-label">Project Name</div>
+        <input class="input-field" id="newProjName" placeholder="my-bot" style="width:100%;">
+      </div>
+      <div>
+        <div class="form-label">Main Command</div>
+        <input class="input-field" id="newProjCmd" placeholder="python main.py" style="width:100%;">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('newProjectModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createProject()">Create</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addUserModal">
+  <div class="modal">
+    <div class="modal-title">+ Add User</div>
+    <div class="new-proj-form">
+      <div>
+        <div class="form-label">Username</div>
+        <input class="input-field" id="newUsername" placeholder="username" style="width:100%;">
+      </div>
+      <div>
+        <div class="form-label">Email</div>
+        <input class="input-field" id="newUserEmail" placeholder="user@email.com" style="width:100%;">
+      </div>
+      <div>
+        <div class="form-label">Password</div>
+        <input class="input-field" id="newUserPassword" type="password" placeholder="Password" style="width:100%;">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addUserModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addUser()">Add User</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const socket = io();
+
+let state = {
+  currentPage: 'dashboard',
+  currentProjectId: null,
+  currentTab: 'files',
+  projects: [],
+  users: [],
+  siteName: 'NIROB PANEL',
+  maintenance: false,
+  accentColor: '#ff6b9d',
+};
+
+const presets = [
+  {name:'Pink',color:'#ff6b9d'},{name:'Purple',color:'#a78bfa'},{name:'Blue',color:'#60a5fa'},
+  {name:'Green',color:'#34d399'},{name:'Red',color:'#f87171'},{name:'Amber',color:'#f59e0b'},
+  {name:'Cyan',color:'#22d3ee'},{name:'Lime',color:'#84cc16'},{name:'Orange',color:'#fb923c'},
+  {name:'Violet',color:'#8b5cf6'},{name:'Gold',color:'#fcd34d'},{name:'Teal',color:'#2dd4bf'},
+];
+
+async function apiCall(url, options = {}) {
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', ...options.headers }
+    });
+    return await res.json();
+  } catch (e) {
+    return { error: 'Network error' };
+  }
+}
+
+async function fetchProjects() {
+  const data = await apiCall('/api/projects');
+  state.projects = data || [];
+  return state.projects;
+}
+
+async function fetchUsers() {
+  try {
+    const data = await apiCall('/api/users');
+    state.users = data || [];
+  } catch (e) {
+    state.users = [];
+  }
+  return state.users;
+}
+
+async function fetchSiteName() {
+  const data = await apiCall('/api/site_name');
+  state.siteName = data.name || 'NIROB PANEL';
+  document.querySelector('.logo').textContent = '👑 ' + state.siteName;
+  return state.siteName;
+}
+
+async function fetchMaintenance() {
+  const data = await apiCall('/api/maintenance');
+  state.maintenance = data.maintenance || false;
+  const t = document.getElementById('maintToggle');
+  if (t) t.classList.toggle('on', state.maintenance);
+  const b = document.getElementById('maintenanceBanner');
+  if (b) b.classList.toggle('show', state.maintenance);
+  return state.maintenance;
+}
+
+async function init() {
+  await Promise.all([
+    fetchProjects(),
+    fetchUsers(),
+    fetchSiteName(),
+    fetchMaintenance(),
+  ]);
+  renderDashboard();
+  renderTheme();
+  showToast('🚀 Welcome to NIROB Panel!', 'success');
+}
+
+function showToast(msg, type = 'info') {
+  const icons = { success: '✅', error: '❌', info: 'ℹ️', warn: '⚠️' };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${icons[type] || '•'}</span> ${msg}`;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transition = 'opacity 0.3s';
+    setTimeout(() => t.remove(), 300);
+  }, 3500);
+}
+
+function showPage(page) {
+  document.querySelectorAll('[id^="page-"]').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) el.style.display = 'block';
+  const nav = document.getElementById('nav-' + page);
+  if (nav) nav.classList.add('active');
+  state.currentPage = page;
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'projects') renderProjects();
+  if (page === 'users') renderUsers();
+  if (page === 'theme') renderTheme();
+}
+
+function renderDashboard() {
+  const running = state.projects.filter(p => p.status === 'running').length;
+  const totalFiles = state.projects.reduce((a, p) => a + (p.files ? p.files.length : 0), 0);
+  
+  document.getElementById('statUsers').textContent = state.users.length;
+  document.getElementById('statProjects').textContent = state.projects.length;
+  document.getElementById('statRunning').textContent = running;
+  document.getElementById('statFiles').textContent = totalFiles || 0;
+  document.getElementById('runningBadge').textContent = running;
+  document.getElementById('projBadge').textContent = state.projects.length;
+  document.getElementById('userCountSub').textContent = state.users.length + ' registered users';
+  
+  const c = document.getElementById('dashProjects');
+  if (!state.projects.length) {
+    c.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No projects yet. Create one!</div>';
+    return;
+  }
+  c.innerHTML = state.projects.map(p => `
+    <div class="project-item" onclick="openProject('${p.id}')">
+      <div class="proj-icon">🐍</div>
+      <div>
+        <div class="proj-name">${p.name}</div>
+        <div class="proj-cmd">${p.command}</div>
+        <div class="run-counter"><div class="run-dot" style="background:${p.status === 'running' ? 'var(--green)' : 'var(--red)'}"></div>${p.files ? p.files.length : 0} files</div>
+      </div>
+      <div class="proj-actions">
+        <span class="status-badge ${p.status}">${p.status.toUpperCase()}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderProjects() {
+  const c = document.getElementById('projectsList');
+  if (!state.projects.length) {
+    c.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:40px;">No projects yet.</div>';
+    return;
+  }
+  c.innerHTML = state.projects.map(p => `
+    <div class="project-item">
+      <div class="proj-icon">🐍</div>
+      <div style="flex:1;">
+        <div class="proj-name">${p.name}</div>
+        <div class="proj-cmd">${p.command}</div>
+        <div class="run-counter"><div class="run-dot" style="background:${p.status === 'running' ? 'var(--green)' : 'var(--red)'}"></div>${p.files ? p.files.length : 0} files</div>
+      </div>
+      <span class="status-badge ${p.status}">${p.status.toUpperCase()}</span>
+      <div style="display:flex;gap:6px;margin-left:8px;">
+        <button class="btn btn-ghost" onclick="openProject('${p.id}')" style="font-size:11px;padding:5px 10px;">View</button>
+        <button class="btn btn-danger" onclick="deleteProject('${p.id}')" style="font-size:11px;padding:5px 10px;">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderUsers() {
+  const c = document.getElementById('usersList');
+  if (!state.users.length) {
+    c.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No users registered.</div>';
+    return;
+  }
+  c.innerHTML = state.users.map(u => `
+    <div class="user-row">
+      <div class="user-row-avatar">${u.username.charAt(0).toUpperCase()}</div>
+      <div>
+        <div class="user-info-name">${u.username}</div>
+        <div class="user-info-stats">${u.email || ''} · ${u.role || 'user'}</div>
+      </div>
+      <div class="user-row-actions">
+        ${u.username !== 'xNIROB' ? `<button class="btn btn-danger" style="font-size:10px;padding:5px 10px;" onclick="deleteUser('${u.username}')">Delete</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTheme() {
+  const g = document.getElementById('colorSwatches');
+  g.innerHTML = presets.map(p => `
+    <div class="color-swatch ${state.accentColor === p.color ? 'active' : ''}" 
+         style="background:${p.color};box-shadow:0 0 10px ${p.color}40"
+         onclick="applyColor('${p.color}', this)" title="${p.name}"></div>
+  `).join('');
+}
+
+function applyColor(hex, el) {
+  state.accentColor = hex;
+  document.documentElement.style.setProperty('--accent', hex);
+  document.documentElement.style.setProperty('--glow', hex + '40');
+  document.getElementById('currentColorDot').style.background = hex;
+  document.getElementById('currentColorDot').style.boxShadow = '0 0 15px ' + hex;
+  document.getElementById('currentColorHex').textContent = hex;
+  document.getElementById('colorHexInput').value = hex;
+  document.getElementById('colorPicker').value = hex;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  if (el) el.classList.add('active');
+  showToast('Theme color updated', 'success');
+}
+
+function applyCustomColor() {
+  const hex = document.getElementById('colorHexInput').value.trim();
+  if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) { showToast('Invalid hex color', 'error'); return; }
+  applyColor(hex, null);
+  renderTheme();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  ['files', 'packages', 'settings-proj', 'logs-proj', 'terminal'].forEach(t => {
+    const el = document.getElementById('proj-tab-' + t);
+    if (el) el.style.display = (t === tab) ? 'block' : 'none';
+  });
+  state.currentTab = tab;
+}
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+async function handleLogout() {
+  await apiCall('/api/logout', { method: 'POST' });
+  window.location.href = '/';
+}
+
+async function toggleMaintenance() {
+  const data = await apiCall('/api/maintenance', { method: 'POST' });
+  state.maintenance = data.maintenance || false;
+  const t = document.getElementById('maintToggle');
+  if (t) t.classList.toggle('on', state.maintenance);
+  const b = document.getElementById('maintenanceBanner');
+  if (b) b.classList.toggle('show', state.maintenance);
+  showToast('Maintenance ' + (state.maintenance ? 'ENABLED' : 'DISABLED'), state.maintenance ? 'warn' : 'info');
+}
+
+// Placeholder functions for project operations
+function openNewProject() { openModal('newProjectModal'); }
+
+async function createProject() {
+  const name = document.getElementById('newProjName').value.trim();
+  const command = document.getElementById('newProjCmd').value.trim() || 'python main.py';
+  if (!name) { showToast('Enter a project name', 'error'); return; }
+  
+  const data = await apiCall('/api/projects', {
+    method: 'POST',
+    body: JSON.stringify({ name, command })
+  });
+  
+  if (data.success) {
+    closeModal('newProjectModal');
+    document.getElementById('newProjName').value = '';
+    document.getElementById('newProjCmd').value = '';
+    showToast('✅ Project created!', 'success');
+    await fetchProjects();
+    renderProjects();
+    renderDashboard();
+  } else {
+    showToast(data.error || 'Failed to create project', 'error');
+  }
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this project?')) return;
+  const data = await apiCall(`/api/projects/${id}`, { method: 'DELETE' });
+  if (data.success) {
+    await fetchProjects();
+    renderProjects();
+    renderDashboard();
+    showToast('Project deleted', 'info');
+  } else {
+    showToast('Failed to delete project', 'error');
+  }
+}
+
+async function openProject(id) {
+  state.currentProjectId = id;
+  const p = state.projects.find(x => x.id === id);
+  if (!p) return;
+  
+  document.querySelectorAll('[id^="page-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('page-project-detail').style.display = 'block';
+  
+  document.getElementById('detailName').textContent = p.name;
+  document.getElementById('detailCmd').textContent = p.command || 'python main.py';
+  document.getElementById('detailStatus').innerHTML = `<span class="status-badge ${p.status}">${p.status.toUpperCase()}</span>`;
+  document.getElementById('detailStartBtn').textContent = p.status === 'running' ? '■ Stop' : '▶ Start';
+  document.getElementById('mainFile').value = p.main_file || 'main.py';
+  document.getElementById('mainCmd').value = p.command || 'python main.py';
+  document.getElementById('portField').value = p.port || '8080';
+  
+  switchTab('files');
+  await fetchFiles(id);
+  renderInstalled();
+}
+
+async function fetchFiles(id) {
+  const data = await apiCall(`/api/projects/${id}/files`);
+  const c = document.getElementById('fileList');
+  if (!data || !data.length) {
+    c.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No files uploaded yet.</div>';
+    return;
+  }
+  c.innerHTML = data.map(f => `
+    <div class="file-item">
+      <div class="file-ext ${f.ext || 'file'}">.${f.ext || 'file'}</div>
+      <div>
+        <div class="file-name">${f.name}</div>
+        <div class="file-size">${(f.size/1024).toFixed(1)} KB</div>
+      </div>
+      <div class="file-actions">
+        <button class="btn btn-ghost" style="font-size:10px;padding:4px 8px;" onclick="setMain('${f.name}')">Set Main</button>
+        <button class="btn btn-danger" style="font-size:10px;padding:4px 8px;" onclick="deleteFile('${f.name}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setMain(name) {
+  document.getElementById('mainFile').value = name;
+  const ext = name.split('.').pop().toLowerCase();
+  let cmd = '';
+  if (ext === 'py') cmd = 'python ' + name;
+  else if (ext === 'js') cmd = 'node ' + name;
+  else if (ext === 'ts') cmd = 'ts-node ' + name;
+  else cmd = 'python ' + name;
+  document.getElementById('mainCmd').value = cmd;
+  showToast(`📄 ${name} set as main file`, 'success');
+}
+
+async function deleteFile(name) {
+  const id = state.currentProjectId;
+  if (!id || !confirm('Delete ' + name + '?')) return;
+  const data = await apiCall(`/api/projects/${id}/files/${name}`, { method: 'DELETE' });
+  if (data.success) {
+    showToast('File deleted', 'info');
+    await fetchFiles(id);
+  } else {
+    showToast('Failed to delete file', 'error');
+  }
+}
+
+async function toggleProject() {
+  const p = state.projects.find(x => x.id === state.currentProjectId);
+  if (!p) return;
+  
+  const action = p.status === 'running' ? 'stop' : 'start';
+  const data = await apiCall(`/api/projects/${p.id}/${action}`, { method: 'POST' });
+  
+  if (data.success) {
+    await fetchProjects();
+    const updated = state.projects.find(x => x.id === p.id);
+    if (updated) {
+      document.getElementById('detailStatus').innerHTML = `<span class="status-badge ${updated.status}">${updated.status.toUpperCase()}</span>`;
+      document.getElementById('detailStartBtn').textContent = updated.status === 'running' ? '■ Stop' : '▶ Start';
+    }
+    renderDashboard();
+    renderProjects();
+    showToast(data.message || 'Action completed', 'success');
+  } else {
+    showToast(data.error || 'Action failed', 'error');
+  }
+}
+
+async function installPackage() {
+  const name = document.getElementById('pkgName').value.trim();
+  if (!name) { showToast('Enter a package name', 'error'); return; }
+  const id = state.currentProjectId;
+  if (!id) return;
+  
+  showToast(`📦 Installing ${name}...`, 'info');
+  const data = await apiCall(`/api/projects/${id}/packages`, {
+    method: 'POST',
+    body: JSON.stringify({ name })
+  });
+  
+  if (data.success) {
+    showToast(`✅ ${name} installed!`, 'success');
+    document.getElementById('pkgName').value = '';
+    await fetchProjects();
+    renderInstalled();
+  } else {
+    showToast(data.error || 'Failed to install', 'error');
+  }
+}
+
+function quickPkg(name) { document.getElementById('pkgName').value = name; installPackage(); }
+
+async function renderInstalled() {
+  const p = state.projects.find(x => x.id === state.currentProjectId);
+  document.getElementById('installedCount').textContent = (p && p.packages ? p.packages.length : 0) + ' INSTALLED';
+  const c = document.getElementById('installedList');
+  if (!p || !p.packages || !p.packages.length) {
+    c.innerHTML = '<div style="color:var(--muted);font-size:12px;font-family:\'Share Tech Mono\',monospace;">No packages installed</div>';
+    return;
+  }
+  c.innerHTML = p.packages.map((pkg) => `
+    <div class="file-item">
+      <div class="file-ext py" style="font-size:10px;">PKG</div>
+      <div>
+        <div class="file-name">${pkg.name}</div>
+        <div class="file-size">v${pkg.version || 'latest'}</div>
+      </div>
+      <div class="file-actions">
+        <button class="btn btn-danger" style="font-size:10px;padding:4px 8px;" onclick="uninstallPkg('${pkg.name}')">Remove</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function uninstallPkg(name) {
+  const id = state.currentProjectId;
+  if (!id) return;
+  const data = await apiCall(`/api/projects/${id}/packages/${name}`, { method: 'DELETE' });
+  if (data.success) {
+    showToast('Package removed', 'info');
+    await fetchProjects();
+    renderInstalled();
+  } else {
+    showToast('Failed to remove package', 'error');
+  }
+}
+
+async function saveSettings() {
+  const id = state.currentProjectId;
+  if (!id) return;
+  const command = document.getElementById('mainCmd').value;
+  const port = document.getElementById('portField').value;
+  const main_file = document.getElementById('mainFile').value;
+  
+  const data = await apiCall(`/api/projects/${id}/settings`, {
+    method: 'POST',
+    body: JSON.stringify({ command, port: parseInt(port), main_file })
+  });
+  
+  if (data.success) {
+    document.getElementById('detailCmd').textContent = command;
+    showToast('Settings saved', 'success');
+    await fetchProjects();
+  } else {
+    showToast('Failed to save settings', 'error');
+  }
+}
+
+async function saveSiteName() {
+  const name = document.getElementById('siteNameInput').value.trim();
+  if (!name) { showToast('Enter a name', 'error'); return; }
+  const data = await apiCall('/api/site_name', {
+    method: 'POST',
+    body: JSON.stringify({ name })
+  });
+  if (data.success) {
+    state.siteName = name;
+    document.querySelector('.logo').textContent = '👑 ' + name;
+    showToast('Site name updated', 'success');
+  }
+}
+
+async function changeAdminPass() {
+  const newPass = document.getElementById('newAdminPass').value;
+  if (!newPass) { showToast('Enter new password', 'error'); return; }
+  const data = await apiCall('/api/change_password', {
+    method: 'POST',
+    body: JSON.stringify({ current_password: 'Hosting', new_password: newPass })
+  });
+  if (data.success) {
+    document.getElementById('newAdminPass').value = '';
+    showToast('✅ Admin password changed!', 'success');
+  } else {
+    showToast(data.error || 'Failed to change password', 'error');
+  }
+}
+
+async function changeMyPassword() {
+  const current = document.getElementById('currentPass').value;
+  const newPass = document.getElementById('newUserPass').value;
+  if (!current || !newPass) { showToast('Enter both passwords', 'error'); return; }
+  const data = await apiCall('/api/change_password', {
+    method: 'POST',
+    body: JSON.stringify({ current_password: current, new_password: newPass })
+  });
+  if (data.success) {
+    document.getElementById('currentPass').value = '';
+    document.getElementById('newUserPass').value = '';
+    showToast('✅ Password changed!', 'success');
+  } else {
+    showToast(data.error || 'Failed to change password', 'error');
+  }
+}
+
+function clearLogs() {
+  document.getElementById('logBox').innerHTML = '<div class="log-line muted">Logs cleared.</div>';
+  showToast('Logs cleared', 'info');
+}
+
+function refreshLogs() {
+  showToast('Logs refreshed', 'info');
+}
+
+function clearTerminal() {
+  document.getElementById('terminalBox').innerHTML = '<div class="terminal-line muted">Terminal cleared.</div>';
+  showToast('Terminal cleared', 'info');
+}
+
+function installAllPackages() {
+  const pkgs = ['flask', 'django', 'discord.py', 'fastapi', 'requests', 'aiohttp', 
+                'python-telegram-bot', 'tweepy', 'pandas', 'numpy', 'openai', 'langchain'];
+  let i = 0;
+  showToast(`📦 Installing ${pkgs.length} packages...`, 'info');
+  const interval = setInterval(() => {
+    if (i < pkgs.length) {
+      showToast(`✅ ${pkgs[i]} installed`, 'success');
+      i++;
+    } else {
+      clearInterval(interval);
+      showToast('🎉 All packages installed!', 'success');
+    }
+  }, 500);
+}
+
+async function addUser() {
+  const username = document.getElementById('newUsername').value.trim();
+  const email = document.getElementById('newUserEmail').value.trim();
+  const password = document.getElementById('newUserPassword').value;
+  if (!username || !email || !password) { showToast('All fields required', 'error'); return; }
+  const data = await apiCall('/api/register', {
+    method: 'POST',
+    body: JSON.stringify({ username, email, password })
+  });
+  if (data.success) {
+    closeModal('addUserModal');
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newUserEmail').value = '';
+    document.getElementById('newUserPassword').value = '';
+    showToast('✅ User added!', 'success');
+    await fetchUsers();
+    renderUsers();
+    renderDashboard();
+  } else {
+    showToast(data.error || 'Failed to add user', 'error');
+  }
+}
+
+function openAddUser() { openModal('addUserModal'); }
+
+async function deleteUser(username) {
+  if (!confirm('Delete user ' + username + '?')) return;
+  const data = await apiCall(`/api/users/${username}`, { method: 'DELETE' });
+  if (data.success) {
+    showToast('User deleted', 'info');
+    await fetchUsers();
+    renderUsers();
+    renderDashboard();
+  } else {
+    showToast('Failed to delete user', 'error');
+  }
+}
+
+function handleDragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('drag'); }
+function handleDragLeave() { document.getElementById('uploadZone').classList.remove('drag'); }
+function handleDrop(e) { e.preventDefault(); handleFiles(e.dataTransfer.files); document.getElementById('uploadZone').classList.remove('drag'); }
+
+async function handleFiles(files) {
+  const id = state.currentProjectId;
+  if (!id) return;
+  for (const file of files) {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch(`/api/projects/${id}/upload`, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`✅ ${file.name} uploaded!`, 'success');
+        await fetchFiles(id);
+      } else {
+        showToast(`❌ Failed to upload ${file.name}`, 'error');
+      }
+    } catch (e) {
+      showToast(`❌ Error uploading ${file.name}`, 'error');
+    }
+  }
+}
+
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); });
+});
+
+setInterval(() => {
+  const cpu = (Math.random() * 30 + 5).toFixed(1);
+  const ram = (Math.random() * 30 + 30).toFixed(1);
+  document.getElementById('cpuVal').textContent = cpu + '%';
+  document.getElementById('ramVal').textContent = ram + '%';
+  document.getElementById('hCpu').textContent = cpu + '%';
+  document.getElementById('hRam').textContent = ram + '%';
+  document.getElementById('cpuBar').style.width = cpu + '%';
+  document.getElementById('ramBar').style.width = ram + '%';
+}, 3000);
+
+init();
+</script>
+</body>
+  </html>
